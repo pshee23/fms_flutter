@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fms/screen/register_user.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import 'home_page.dart';
 
@@ -16,17 +17,15 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passwordController = TextEditingController();
 
   Future save() async {
-    Map<String, String> queryParam = {
+    var data = {
       "username" : emailController.text,
       "password" : passwordController.text
     };
-    print(emailController.text);
-    print(passwordController.text);
-
-    final uri = Uri.http('192.168.42.1:8080', '/login', queryParam); // local test라도 ip를 직접 입력해야지 됨
-
+    var body = json.encode(data);
+    final uri = Uri.http('192.168.10.107:8080', '/login'); // local test라도 ip를 직접 입력해야지 됨
     var res = await http.post(uri,
-      headers: {'Content-Type': 'application/json'}
+        headers: {'Content-Type': 'application/json'},
+        body: body
     );
     print(res.body);
     print(res.statusCode);
