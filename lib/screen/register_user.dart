@@ -66,7 +66,7 @@ class _RegisterUserState extends State<RegisterUser> {
       "role" : role
     };
     var body = json.encode(data);
-    final uri = Uri.http('192.168.42.1:8080', '/join'); // local test라도 ip를 직접 입력해야지 됨
+    final uri = Uri.http('192.168.42.1:8080', '/api/join'); // local test라도 ip를 직접 입력해야지 됨
 
     var res = await http.post(uri,
         headers: {'Content-Type': 'application/json'},
