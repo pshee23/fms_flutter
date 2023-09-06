@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
       "password" : passwordController.text
     };
     var body = json.encode(data);
-    final uri = Uri.http('192.168.10.139:8080', '/login'); // local test라도 ip를 직접 입력해야지 됨
+    final uri = Uri.http('192.168.0.2:8080', '/login'); // local test라도 ip를 직접 입력해야지 됨
     var res = await http.post(uri,
         headers: {'Content-Type': 'application/json'},
         body: body
