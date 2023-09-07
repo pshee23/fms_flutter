@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fms/screen/login_page.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
-void main() {
+Future<void> main() async {
   runApp(const MyApp());
 }
 
@@ -11,12 +11,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new GetMaterialApp(
+    return GetMaterialApp(
       title: 'fitness management service',
-      theme: new ThemeData(
+      theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: new LoginPage(),
+      home: LoginPage(),
     );
   }
 }

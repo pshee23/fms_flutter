@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  String baseUrl = '192.168.10.162:8080';
 
   Future save() async {
     var data = {
@@ -22,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
       "password" : passwordController.text
     };
     var body = json.encode(data);
-    final uri = Uri.http('192.168.0.2:8080', '/login'); // local test라도 ip를 직접 입력해야지 됨
+    final uri = Uri.http(baseUrl, '/login'); // local test라도 ip를 직접 입력해야지 됨
     var res = await http.post(uri,
         headers: {'Content-Type': 'application/json'},
         body: body
@@ -34,12 +35,13 @@ class _LoginPageState extends State<LoginPage> {
       print("success");
       var refreshtoken = res.headers['refreshtoken'];
       var authorization = res.headers['authorization'];
-      print(refreshtoken);
-      print(authorization);
+      print("auth token=$authorization");
+      print("refresh token=$refreshtoken");
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => HomePage(
+              username: emailController.text,
               refreshtoken: refreshtoken!,
               authorization: authorization!
             )),

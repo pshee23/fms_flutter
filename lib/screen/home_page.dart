@@ -1,13 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
+    required this.username,
     required this.refreshtoken,
     required this.authorization
   });
 
+  final String username;
   final String refreshtoken;
   final String authorization;
 
@@ -15,18 +19,45 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+// class TokenInfo {
+//   final String grantType;
+//   final String accessToken;
+//   final String refreshToken;
+//
+//   TokenInfo({
+//     required this.grantType,
+//     required this.accessToken,
+//     required this.refreshToken});
+//
+//   factory TokenInfo.fromJSON(Map<String, dynamic> map) {
+//     return TokenInfo(
+//         grantType: map['grantType'],
+//         accessToken: map['accessToken'],
+//         refreshToken: map['refreshToken']);
+//   }
+// }
+
 class _HomePageState extends State<HomePage> {
-  final String url = '192.168.0.2:8080';
+  String baseUrl = '192.168.10.162:8080';
 
-  set authorization(String? authorization) {}
+  String username = "";
+  String access_token = "";
+  String refresh_token = "";
 
-  set refreshtoken(String? refreshtoken) {}
+  @override
+  void initState() {
+    username = widget.username;
+    access_token = widget.authorization;
+    refresh_token = widget.refreshtoken;
+    super.initState();
+  }
 
   Future checkAuthorization(path) async {
-    final uri = Uri.http(url, path);
+    final uri = Uri.http(baseUrl, path);
     var res = await http.get(uri,
-        headers: {'Authorization' : widget.authorization},
+        headers: {'Authorization' : access_token},
     );
+
     int status_code = res.statusCode;
     print(res.body);
     if(status_code == 200) {
@@ -42,25 +73,49 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future refreshTokenRequest() async {
-    final uri = Uri.http(url, '/api/refresh');
-    var res = await http.post(uri,
-        headers: {'Authorization' : widget.refreshtoken},
+    final uri = Uri.http(baseUrl, '/api/refresh');
+    var res = await http.put(uri,
+        headers: {'Authorization' : refresh_token},
     );
 
     int status_code = res.statusCode;
-    print(res.body);
     if(status_code == 200) {
+      // var body_str = json.decode(res.body);
+      // print("refresh received. body=$body_str");
+      // TokenInfo tokenInfo = TokenInfo.fromJSON(body_str);
+      // print("received refresh result. tokenInfo=$tokenInfo");
+
+      String responseBody = utf8.decode(res.bodyBytes);
+      Map<String, dynamic> map = jsonDecode(responseBody);
+      print("map = $map");
+      var prefix = map['grantType'];
+      var access = map['accessToken'];
+      var refresh = map['refreshToken'];
       print("[$status_code] refresh success");
-      var re_refreshtoken = res.headers['refreshtoken'];
-      var re_authorization = res.headers['authorization'];
-      print("received refresh result. refresh=$re_refreshtoken, token=$re_authorization");
+      var re_refreshtoken = prefix + refresh;
+      var re_authorization = prefix + access;
+      print("received refresh result. re_authorization=$re_authorization, re_refreshtoken=$re_refreshtoken");
       setState(() {
-        this.refreshtoken = re_refreshtoken;
-        this.authorization = re_authorization;
+        refresh_token = re_refreshtoken;
+        access_token = re_authorization;
       });
+      print("after setState tokens. authorization=$access_token, refreshtoken=$refresh_token");
     } else {
-      print("[$status_code] refresh fail..");
+      var res_body = res.body;
+      print("[$status_code] refresh fail.. body=$res_body");
     }
+  }
+
+  void logout() {
+    var data = {
+      "username" : username
+    };
+
+    final uri = Uri.http(baseUrl, '/api/logout', data);
+    http.put(uri);
+
+    // super.dispose();
+    Navigator.pop(context);
   }
 
   @override
@@ -68,6 +123,9 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
         appBar: AppBar(
           title: const Text('Home Page'),
+          actions: <Widget>[
+            IconButton(onPressed: (){logout();}, icon: Icon(Icons.exit_to_app))
+          ],
         ),
         body: Container(
           margin: EdgeInsets.all(30.0),
