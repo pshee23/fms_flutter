@@ -67,10 +67,15 @@ class _LoginPageState extends State<LoginPage> {
     var data = { "username" : '$accountName', "password" : '$password' };
     var body = json.encode(data);
     final uri = Uri.http(baseUrl, '/login'); // local test라도 ip를 직접 입력해야지 됨
-    var response = await http.post(uri,
-        headers: {'Content-Type': 'application/json'},
-        body: body
-    );
+    var response;
+    try {
+      response = await http.post(uri,
+          headers: {'Content-Type': 'application/json'},
+          body: body
+      ).timeout(const Duration(milliseconds: 5000)); // TODO 뭔가 다른 에러가 리턴됨. exception catch
+    } catch(e) {
+      print(e);
+    }
     print(response.body);
     print(response.statusCode);
     // TODO ip 잘못되면 아무 반응없던데 어떻게 해결?
