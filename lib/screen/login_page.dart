@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fms/screen/register_user.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../model/Login.dart';
 import 'home_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -19,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   static final storage = FlutterSecureStorage();
-  String baseUrl = '192.168.0.2:8080';
+  String baseUrl = '';
   dynamic userInfo = '';
 
   //flutter_secure_storage 사용을 위한 초기화 작업
@@ -34,6 +36,16 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _asyncMethod() async {
+    String serverUrl = dotenv.get('SERVER_URL'); // Null Saftey 방지. 예외 발생. 기본값도 설정가능 (예외 안나는거 같은데)
+    //String serverPort = dotenv.env['SERVER_URL'].toString(); // 예시
+    if (serverUrl.isEmpty) {
+      print('.env config SERVER_URL is empty! URL=$serverUrl');
+      SystemNavigator.pop();
+      return;
+    } else {
+      baseUrl = serverUrl;
+    }
+
     // read 함수로 key값에 맞는 정보를 불러오고 데이터타입은 String 타입
     // 데이터가 없을때는 null을 반환
     userInfo = await storage.read(key:'login');
