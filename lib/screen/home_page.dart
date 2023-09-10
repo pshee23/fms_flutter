@@ -1,61 +1,61 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../model/Login.dart';
+
 
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    required this.username,
-    required this.refreshtoken,
-    required this.authorization
-  });
-
-  final String username;
-  final String refreshtoken;
-  final String authorization;
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-// class TokenInfo {
-//   final String grantType;
-//   final String accessToken;
-//   final String refreshToken;
-//
-//   TokenInfo({
-//     required this.grantType,
-//     required this.accessToken,
-//     required this.refreshToken});
-//
-//   factory TokenInfo.fromJSON(Map<String, dynamic> map) {
-//     return TokenInfo(
-//         grantType: map['grantType'],
-//         accessToken: map['accessToken'],
-//         refreshToken: map['refreshToken']);
-//   }
-// }
-
 class _HomePageState extends State<HomePage> {
-  String baseUrl = '192.168.10.162:8080';
+  String baseUrl = '192.168.0.2:8080';
+  static final storage = FlutterSecureStorage();
+  // dynamic userInfo = '';
+  late Login login;
 
-  String username = "";
-  String access_token = "";
-  String refresh_token = "";
+  logout() async {
+    // userInfo = await storage.read(key: 'login');
+    String username = login.accountName;
+
+    var data = {
+      "username" : username,
+    };
+    final uri = Uri.http(baseUrl, '/api/logout', data);
+    http.put(uri);
+    await storage.delete(key: 'login');
+    Navigator.pushNamed(context, '/');
+  }
+
+  checkUserState() async {
+    var userInfo = await storage.read(key: 'login');
+    if (userInfo == null) {
+      print('로그인 페이지로 이동');
+      Navigator.pushNamed(context, '/');
+    } else {
+      print('로그인 확인');
+      login = Login.fromJson(jsonDecode(userInfo));
+    }
+  }
 
   @override
   void initState() {
-    username = widget.username;
-    access_token = widget.authorization;
-    refresh_token = widget.refreshtoken;
     super.initState();
+
+    // 비동기로 flutter secure storage 정보를 불러오는 작업
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkUserState();
+    });
   }
 
   Future checkAuthorization(path) async {
     final uri = Uri.http(baseUrl, path);
     var res = await http.get(uri,
-        headers: {'Authorization' : access_token},
+        headers: {'Authorization' : login.accessToken},
     );
 
     int status_code = res.statusCode;
@@ -75,47 +75,37 @@ class _HomePageState extends State<HomePage> {
   Future refreshTokenRequest() async {
     final uri = Uri.http(baseUrl, '/api/refresh');
     var res = await http.put(uri,
-        headers: {'Authorization' : refresh_token},
+        headers: {'Authorization' : login.refreshToken},
     );
 
-    int status_code = res.statusCode;
-    if(status_code == 200) {
-      // var body_str = json.decode(res.body);
-      // print("refresh received. body=$body_str");
-      // TokenInfo tokenInfo = TokenInfo.fromJSON(body_str);
-      // print("received refresh result. tokenInfo=$tokenInfo");
+    int statusCode = res.statusCode;
+    if(statusCode == 200) {
 
       String responseBody = utf8.decode(res.bodyBytes);
+
       Map<String, dynamic> map = jsonDecode(responseBody);
       print("map = $map");
       var prefix = map['grantType'];
       var access = map['accessToken'];
       var refresh = map['refreshToken'];
-      print("[$status_code] refresh success");
+      print("[$statusCode] refresh success");
       var re_refreshtoken = prefix + refresh;
       var re_authorization = prefix + access;
       print("received refresh result. re_authorization=$re_authorization, re_refreshtoken=$re_refreshtoken");
-      setState(() {
-        refresh_token = re_refreshtoken;
-        access_token = re_authorization;
-      });
-      print("after setState tokens. authorization=$access_token, refreshtoken=$refresh_token");
+
+      print("before relogin login_obj=$login");
+      // TODO body가 아니라 header로
+      Login reLogin = Login(login.accountName, login.password,
+          re_authorization, re_refreshtoken);
+      var val = jsonEncode(reLogin);
+      login = reLogin;
+      await storage.write(key: 'login', value: val,);
+      var result = storage.read(key: 'login');
+      print("relogin result=$result, login_obj=$login");
     } else {
       var res_body = res.body;
-      print("[$status_code] refresh fail.. body=$res_body");
+      print("[$statusCode] refresh fail.. body=$res_body");
     }
-  }
-
-  void logout() {
-    var data = {
-      "username" : username
-    };
-
-    final uri = Uri.http(baseUrl, '/api/logout', data);
-    http.put(uri);
-
-    // super.dispose();
-    Navigator.pop(context);
   }
 
   @override
