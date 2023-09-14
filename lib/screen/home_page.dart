@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../model/Login.dart';
+import 'calendar_page.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -129,7 +130,11 @@ class _HomePageState extends State<HomePage> {
             children: [
               ElevatedButton(onPressed: (){checkAuthorization('/api/user');}, child: Text("USER")),
               ElevatedButton(onPressed: (){checkAuthorization('/api/manager');}, child: Text("MANAGER")),
-              ElevatedButton(onPressed: (){checkAuthorization('/api/admin');}, child: Text("ADMIN")),
+              ElevatedButton(onPressed: (){Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => CalendarPage()),
+              );}, child: Text("CALENDAR")),
             ],
           ),
       )
