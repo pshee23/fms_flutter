@@ -69,8 +69,11 @@ class _LoginPageState extends State<LoginPage> {
     final uri = Uri.http(baseUrl, '/login'); // local test라도 ip를 직접 입력해야지 됨
     var response;
     try {
-      response = await http.post(uri,
-          headers: {'Content-Type': 'application/json'},
+      response = await http.post(
+          uri,
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: body
       ).timeout(const Duration(milliseconds: 5000)); // TODO 뭔가 다른 에러가 리턴됨. exception catch
     } catch(e) {

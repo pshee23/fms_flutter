@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../locator/locator.dart';
 import '../model/Login.dart';
+import '../service/http_service.dart';
 import 'calendar_page.dart';
 
 
@@ -19,17 +21,13 @@ class _HomePageState extends State<HomePage> {
   static final storage = FlutterSecureStorage();
   // dynamic userInfo = '';
   late Login login;
+  final HttpService _httpService = locator<HttpService>();
 
   logout() async {
     // userInfo = await storage.read(key: 'login');
     String username = login.accountName;
 
-    var data = {
-      "username" : username,
-    };
-    final uri = Uri.http(baseUrl, '/api/logout', data);
-    http.put(uri);
-    await storage.delete(key: 'login');
+    _httpService.logout(username);
     Navigator.pushNamed(context, '/');
   }
 

@@ -41,26 +41,26 @@ class CustomTextField extends StatelessWidget {
       onSaved: onSaved,
       // null이 리턴되면 에러가 없다
       // 에러가 있으면 에러를 String 값으로 리턴
-      validator: (String? val){
-        if(val == null || val.isEmpty) {
-          return '값을 입력해주세요';
-        }
-
-        if(isTime) {
-          int time = int.parse(val);
-          if(time < 0) {
-            return '0 이상의 숫자를 입력해주세요';
-          }
-
-          if(time > 24) {
-            return '24 이하의 숫자를 입력해주세요';
-          }
-        } else {
-
-        }
-
-        return null;
-      },
+      // validator: (String? val){
+      //   if(val == null || val.isEmpty) {
+      //     return '값을 입력해주세요';
+      //   }
+      //
+      //   if(isTime) {
+      //     int time = int.parse(val);
+      //     if(time < 0) {
+      //       return '0 이상의 숫자를 입력해주세요';
+      //     }
+      //
+      //     if(time > 24) {
+      //       return '24 이하의 숫자를 입력해주세요';
+      //     }
+      //   } else {
+      //
+      //   }
+      //
+      //   return null;
+      // },
       cursorColor: Colors.grey,
       maxLines: isTime ? 1 : null, // 줄바꿈
       expands: !isTime,
@@ -73,6 +73,7 @@ class CustomTextField extends StatelessWidget {
         filled: true,
         fillColor: Colors.grey[300],
       ),
+      autovalidateMode: AutovalidateMode.disabled,
     );
   }
 }
