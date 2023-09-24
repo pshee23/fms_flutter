@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:fms/component/schedule_bottom_sheet.dart';
 import 'package:fms/component/schedule_card.dart';
 import 'package:fms/component/today_banner.dart';
@@ -58,19 +56,30 @@ class _CalendarPageState extends State<CalendarPage> {
                   future: _httpService.fetchSchedules(selectedDay),
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       if(snapshot.hasData == false) {
-                        return CircularProgressIndicator();
+                        return SizedBox(
+                            height: 10,
+                            width: 10,
+                            child: CircularProgressIndicator());
                       }
-                      print(snapshot.data);
+
+                      if(snapshot.hasError) {
+                        return Center(
+                          child: Text(snapshot.error.toString()),
+                        );
+                      }
+                      List<Schedule> scheduleList = snapshot.data;
+
                       return ListView.separated(
-                          itemCount: 3,
+                          itemCount: scheduleList.length,
                           separatorBuilder: (context, index) {
                             return SizedBox(height: 8.0,);
                           }, // item 사이에 이루어지는 Builder
                           itemBuilder: (context, index){
+                            final scheduleInfo = scheduleList[index];
                             return ScheduleCard(
-                              startTime: 12,
-                              endTime: 14,
-                              content: '프로그래밍 공부하기',
+                              startTime: scheduleInfo.startDateTime,
+                              endTime: scheduleInfo.startDateTime,
+                              status: scheduleInfo.status,
                               color: Colors.red,
                             );
                           });

@@ -25,11 +25,11 @@ class Schedule {
   factory Schedule.fromJson(Map<String, dynamic> json) {
     return Schedule(
       lessonHistoryId: json['lessonHistoryId'],
-      lessonId: json['lessonId'],
-      memberId: json['memberId'],
       employeeId: json['employeeId'],
-      startDateTime: json['startDateTime'],
-      endDateTime: json['endDateTime'],
+      memberId: json['memberId'],
+      lessonId: json['lessonId'],
+      startDateTime: DateTime.parse(json['startDateTime']),
+      endDateTime: DateTime.parse(json['endDateTime']),
       status: json['status'],
       // colorId: 1,
       // updateDateTime: DateTime.now()

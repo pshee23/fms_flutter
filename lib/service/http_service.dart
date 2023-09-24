@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fms/model/category_colors.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 
 import '../model/schedule.dart';
 
@@ -42,7 +41,10 @@ class HttpServiceImplementation implements HttpService {
     final uri = Uri.http(serverUrl, '/lesson-history/datetime/${dateTime.year}/${dateTime.month}/${dateTime.day}');
     final response = await http.get(
         uri,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'toyProject1234'
+        },
     );
 
     var code = response.statusCode;

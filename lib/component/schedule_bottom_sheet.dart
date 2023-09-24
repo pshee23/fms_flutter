@@ -133,11 +133,12 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
       DateTime startTime = DateTime.parse(startTimeStr);
       DateTime endTime = DateTime.parse(endTimeStr);
       print('startTime=$startTime, endTime=$endTime');
+
       Schedule schedule = Schedule(
         lessonHistoryId: 0,
-        lessonId: 1,
-        memberId: 1,
-        employeeId: 1,
+        lessonId: int.parse('$lessonId'),
+        memberId: int.parse('$memberId'),
+        employeeId: int.parse('$employeeId'),
         startDateTime: startTime,
         endDateTime: endTime,
         status: "RESERVE",
@@ -145,8 +146,10 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
         // updateDateTime: DateTime.now()
       );
       var code = await _httpService.createLessonHistory(schedule);
+      print('create Lesson ?! $code');
+      Navigator.pop(context);
     } else {
-      print("에러가 있습니다");
+      print("create Lesson 에러가 있습니다");
     }
   }
 }
