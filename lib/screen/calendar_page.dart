@@ -76,7 +76,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             return ScheduleCard(
                               startTime: scheduleInfo.startDateTime,
                               endTime: scheduleInfo.endDateTime,
-                              status: scheduleInfo.status,
+                              scheduleInfo: scheduleInfo,
                               color: Colors.red,
                             );
                           });
