@@ -7,6 +7,7 @@ import '../model/category_colors.dart';
 import '../model/schedule.dart';
 import '../service/http_service.dart';
 import 'custom_text_field.dart';
+import 'custom_time_field.dart';
 
 class ScheduleBottomSheet extends StatefulWidget {
   final DateTime selectedDate;
@@ -22,10 +23,8 @@ class ScheduleBottomSheet extends StatefulWidget {
 class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
   final GlobalKey<FormState> formKey = GlobalKey();
 
-  int? startHour;
-  int? startMin;
-  int? endHour;
-  int? endMin;
+  String? startTime;
+  String? endTime;
 
   int? lessonId;
   int? memberId;
@@ -59,18 +58,12 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _Time(
-                      onStartHourSaved: (String? val) {
-                        startHour = int.parse(val!);
+                      onStartTimeSaved: (String? val) {
+                        startTime = val;
                       },
-                      onStartMinSaved: (String? val) {
-                        startMin = int.parse(val!);
-                      },
-                      onEndHourSaved: (String? val) {
-                        endHour = int.parse(val!);
-                      },
-                      onEndMinSaved: (String? val) {
-                        endMin = int.parse(val!);
-                      },
+                      onEndTimeSaved: (String? val) {
+                        endTime = val;
+                      }
                     ),
                     SizedBox(height: 16.0),
                     _Content(
@@ -126,21 +119,22 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
     // validate를 실행하면 모든 form 필드의 validator가 실행되고 에러가 있으면 String 리턴, 없으면 null
     if(formKey.currentState!.validate()) {
       formKey.currentState!.save();
+
       var selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.parse(widget.selectedDate.toString())).toString();
-      var startTimeStr = '$selectedDate $startHour:$startMin:00';
-      var endTimeStr = '$selectedDate $endHour:$endMin:00';
+      var startTimeStr = '$selectedDate $startTime:00';
+      var endTimeStr = '$selectedDate $endTime:00';
       print('startTimeStr=$startTimeStr, endTimeStr=$endTimeStr');
-      DateTime startTime = DateTime.parse(startTimeStr);
-      DateTime endTime = DateTime.parse(endTimeStr);
-      print('startTime=$startTime, endTime=$endTime');
+      DateTime startTimeRes = DateTime.parse(startTimeStr);
+      DateTime endTimeRes = DateTime.parse(endTimeStr);
+      print('startTime=$startTimeRes, endTime=$endTimeRes');
 
       Schedule schedule = Schedule(
         lessonHistoryId: 0,
         lessonId: int.parse('$lessonId'),
         memberId: int.parse('$memberId'),
         employeeId: int.parse('$employeeId'),
-        startDateTime: startTime,
-        endDateTime: endTime,
+        startDateTime: startTimeRes,
+        endDateTime: endTimeRes,
         status: "RESERVE",
         // colorId: 1,
         // updateDateTime: DateTime.now()
@@ -155,55 +149,38 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
 }
 
 class _Time extends StatelessWidget {
-  final FormFieldSetter<String> onStartHourSaved;
-  final FormFieldSetter<String> onStartMinSaved;
-  final FormFieldSetter<String> onEndHourSaved;
-  final FormFieldSetter<String> onEndMinSaved;
+  final FormFieldSetter<String> onStartTimeSaved;
+  final FormFieldSetter<String> onEndTimeSaved;
 
   const _Time({
-    required this.onStartHourSaved,
-    required this.onStartMinSaved,
-    required this.onEndHourSaved,
-    required this.onEndMinSaved,
+    required this.onStartTimeSaved,
+    required this.onEndTimeSaved,
     Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+
     return Row(
       children: [
         Expanded(
-            child: CustomTextField(
-              lable: 'Start Hour',
-              isTime: true,
-              onSaved: onStartHourSaved,
-            )
-        ),
-        Expanded(
-            child: CustomTextField(
-              lable: 'Min',
-              isTime: true,
-              onSaved: onStartMinSaved,
+            child: CustomTimeField(
+              onSaved: onStartTimeSaved,
+              label: 'Start',
             )
         ),
         SizedBox(width: 16.0,),
         Expanded(
-            child: CustomTextField(
-              lable: 'End Hour',
-              isTime: true,
-              onSaved: onEndHourSaved,
-            )
-        ),
-        Expanded(
-            child: CustomTextField(
-              lable: 'Min',
-              isTime: true,
-              onSaved: onEndMinSaved,
+            child: CustomTimeField(
+              onSaved: onEndTimeSaved,
+              label: 'End',
             )
         ),
       ],
     );
   }
 }
+
+
 
 class _Content extends StatelessWidget {
   final FormFieldSetter<String> onLessonIdSaved;

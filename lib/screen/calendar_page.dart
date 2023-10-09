@@ -56,10 +56,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   future: _httpService.fetchSchedules(selectedDay),
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       if(snapshot.hasData == false) {
-                        return SizedBox(
-                            height: 10,
-                            width: 10,
-                            child: CircularProgressIndicator());
+                        return Text("No Schedule");
                       }
 
                       if(snapshot.hasError) {
@@ -78,7 +75,7 @@ class _CalendarPageState extends State<CalendarPage> {
                             final scheduleInfo = scheduleList[index];
                             return ScheduleCard(
                               startTime: scheduleInfo.startDateTime,
-                              endTime: scheduleInfo.startDateTime,
+                              endTime: scheduleInfo.endDateTime,
                               status: scheduleInfo.status,
                               color: Colors.red,
                             );
