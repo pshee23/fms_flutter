@@ -131,8 +131,11 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
       Schedule schedule = Schedule(
         lessonHistoryId: 0,
         lessonId: int.parse('$lessonId'),
+        lessonName: "", // TODO read/write 별도의 class..
         memberId: int.parse('$memberId'),
+        memberName: "",
         employeeId: int.parse('$employeeId'),
+        employeeName: "",
         startDateTime: startTimeRes,
         endDateTime: endTimeRes,
         status: "RESERVE",

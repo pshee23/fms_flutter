@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fms/component/schedule_info_sheet.dart';
 import 'package:intl/intl.dart';
 
 import '../const/colors.dart';
@@ -21,14 +22,14 @@ class ScheduleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        showDialog(
-            context: context,
-            barrierDismissible: true, // 바깥 영역 터치시 닫을지 여부
-            builder: (BuildContext context) {
-              return _ScheduleInfo(
-                  scheduleInfo: scheduleInfo
-              );
-            }
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) {
+            return ScheduleInfoSheet(
+                scheduleInfo: scheduleInfo
+            );
+          },
         );
       },
       child: Container(
@@ -61,40 +62,6 @@ class ScheduleCard extends StatelessWidget {
   }
 }
 
-class _ScheduleInfo extends StatelessWidget {
-  final Schedule scheduleInfo;
-
-  const _ScheduleInfo({
-    required this.scheduleInfo,
-    Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      // TODO Size control, data input
-      content: Column(
-        children: [
-          Text('schedule name: ${scheduleInfo.lessonId}'),
-          Text('employee name: ${scheduleInfo.employeeId}'),
-          Text('member name: ${scheduleInfo.memberId}'),
-          Text('schedule start: ${scheduleInfo.startDateTime}'),
-          Text('schedule end: ${scheduleInfo.endDateTime}'),
-          Text('schedule status: ${scheduleInfo.status}'),
-        ],
-      ),
-      insetPadding: const  EdgeInsets.fromLTRB(0,80,0, 80),
-      actions: [
-        TextButton(
-          child: const Text('확인'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ],
-    );
-  }
-}
-
 class _Time extends StatelessWidget {
   final DateTime startTime;
   final DateTime endTime;
@@ -123,16 +90,14 @@ class _Time extends StatelessWidget {
         Row(
           children: [
             Text(
-              DateFormat("hh:mm:ss").format(startTime),
-              // '${endTime.toString()}',
+              DateFormat("HH:mm").format(startTime),
               style: textStyle.copyWith(
                   color: Colors.blue
               ),
             ),
             Text(" ~ "),
             Text(
-              DateFormat("hh:mm:ss").format(endTime),
-              // '${endTime.toString()}',
+              DateFormat("HH:mm").format(endTime),
               style: textStyle.copyWith(
                 color: Colors.blue
               ),
@@ -164,7 +129,7 @@ class _Content extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'lesson number: ${scheduleInfo.lessonId}', // TODO return lesson name
+              scheduleInfo.lessonName,
               style: textStyle,
             ),
             Text(

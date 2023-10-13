@@ -14,6 +14,10 @@ abstract class HttpService {
   void logout(username);
 
   Future<List<Schedule>> fetchSchedules(datetime);
+
+  void updateScheduleStatus(lessonHistoryId, status);
+
+  void fetchId(isEmployee, loginId);
 }
 
 class HttpServiceImplementation implements HttpService {
@@ -33,12 +37,17 @@ class HttpServiceImplementation implements HttpService {
 
   @override
   Future<List<Schedule>> fetchSchedules(datetime) async {
-    // DateTime datetime = DateFormat("yyyy-MM-dd").format(datetime);
     DateTime dateTime = datetime;
-
-    print('watchSchedules. body=$datetime');
-
-    final uri = Uri.http(serverUrl, '/lesson-history/datetime/${dateTime.year}/${dateTime.month}/${dateTime.day}');
+    final id = await storage.read(key: 'id');
+    final isEmployee = await storage.read(key: 'isEmployee');
+    print('watchSchedules. body=$datetime, id=$id, isEmployee=$isEmployee');
+    var path = 'member';
+    if(isEmployee == 'true') {
+      path = 'employee';
+    }
+    var url = '/lesson-history/$path/$id/datetime/${dateTime.year}/${dateTime.month}/${dateTime.day}';
+    print('fetch schedules get. url=$url');
+    final uri = Uri.http(serverUrl, url);
     final response = await http.get(
         uri,
         headers: {
@@ -71,7 +80,6 @@ class HttpServiceImplementation implements HttpService {
     final uri = Uri.http(serverUrl, '/lesson-history');
     var body = json.encode(schedule.toJson());
     final response = await http.post(
-        // Uri.parse('http://192.168.10.162:8080/lesson-history'),
         uri,
         headers: {'Content-Type': 'application/json'},
         body: body
@@ -80,6 +88,30 @@ class HttpServiceImplementation implements HttpService {
     var code = response.statusCode;
     print('create Lesson-History. code=$code');
     return code;
+  }
+
+  @override
+  updateScheduleStatus(lessonHistoryId, status) async {
+    final uri = Uri.http(serverUrl, 'lesson-history/$lessonHistoryId/status/$status');
+    print('update status. uri=$uri');
+    http.put(uri);
+  }
+
+  @override
+  void fetchId(isEmployee, loginId) async {
+    print('fetchId. isEmployee=$isEmployee, loginId=$loginId');
+
+    String path = 'member';
+    if(isEmployee == true) {
+      path = 'employee';
+    }
+    final uri = Uri.http(serverUrl, '/$path/$loginId');
+    final response = await http.get(uri);
+
+    var code = response.statusCode;
+    print('fetchId result. code=$code, body=${response.body}');
+    storage.write(key: 'id', value: response.body,);
+    storage.write(key: 'isEmployee', value: isEmployee.toString(),);
   }
 
 }
