@@ -4,7 +4,9 @@ import 'package:fms/screen/register_user.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../locator/locator.dart';
 import '../model/Login.dart';
+import '../service/http_service.dart';
 import 'home_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -16,19 +18,24 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
   final _formKey = GlobalKey<FormState>();
+
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+
   static final storage = FlutterSecureStorage();
+
+  final HttpService _httpService = locator<HttpService>();
+
   String baseUrl = '';
   dynamic userInfo = '';
+  late List<bool> isEmployee;
 
   //flutter_secure_storage 사용을 위한 초기화 작업
   @override
   void initState() {
     super.initState();
-
+    isEmployee = [true, false];
     // 비동기로 flutter secure storage 정보를 불러오는 작업
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _asyncMethod();
@@ -37,7 +44,6 @@ class _LoginPageState extends State<LoginPage> {
 
   _asyncMethod() async {
     String serverUrl = dotenv.get('SERVER_URL'); // Null Saftey 방지. 예외 발생. 기본값도 설정가능 (예외 안나는거 같은데)
-    //String serverPort = dotenv.env['SERVER_URL'].toString(); // 예시
     if (serverUrl.isEmpty) {
       print('.env config SERVER_URL is empty! URL=$serverUrl');
       SystemNavigator.pop();
@@ -63,8 +69,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future login(accountName, password) async {
-    var data = { "username" : '$accountName', "password" : '$password' };
+  Future login(isEmployee, accountName, password) async {
+    var data = {
+      "username" : '$accountName',
+      "password" : '$password',
+      "employee" : isEmployee
+    };
     var body = json.encode(data);
     final uri = Uri.http(baseUrl, '/login'); // local test라도 ip를 직접 입력해야지 됨
     var response;
@@ -94,6 +104,8 @@ class _LoginPageState extends State<LoginPage> {
       }
       var val = jsonEncode(Login(accountName, password, authorization, refreshtoken));
       await storage.write(key: 'login', value: val,);
+
+      _httpService.fetchId(isEmployee, accountName);
 
       Navigator.push(
         context,
@@ -143,6 +155,33 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ToggleButtons(
+                  children: [
+                    Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('회원', style: TextStyle(fontSize: 18))),
+                    Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('직원', style: TextStyle(fontSize: 18))),
+                  ],
+                  isSelected: isEmployee,
+                  onPressed: (int index) {
+                    setState(() {
+                      for(int buttonIndex = 0;
+                      buttonIndex < isEmployee.length;
+                      buttonIndex++) {
+                        if(buttonIndex == index) {
+                          isEmployee[buttonIndex] = true;
+                        } else {
+                          isEmployee[buttonIndex] = false;
+                        }
+                      }
+                    });
+                  },
+                ),
+              ),
+              Padding(
                 padding:
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
@@ -181,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        login(emailController.text, passwordController.text);
+                        login(isEmployee[1], emailController.text, passwordController.text);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please fill input')),
