@@ -25,6 +25,15 @@ class Calendar extends StatelessWidget {
       fontWeight: FontWeight.w700,
     );
 
+    // TODO
+    Map<DateTime, List<String>> events = {
+      DateTime.utc(2023,10,13) : [ "12", "23" ],
+      DateTime.utc(2022,10,14) : [ "23" ],
+    };
+
+    List<String> getEventsForDay(DateTime day) {
+      return events[day] ?? [];
+    }
     return TableCalendar(
       locale: 'ko_KR',
       focusedDay: focusedDay,
@@ -58,6 +67,15 @@ class Calendar extends StatelessWidget {
         selectedTextStyle: defaultTextStyle.copyWith(
           color: PRIMARY_COLOR,
         ),
+        // markerSizeScale: 0.5,
+        markersAnchor : 1.3,
+        markersMaxCount : 1,
+        markerSize : 8.0,
+        markerDecoration : const BoxDecoration(
+          color: Colors.pink,
+          shape: BoxShape.circle,
+          // backgroundBlendMode: BlendMode.screen,
+        ),
       ),
       onDaySelected: onDaySelected,
       selectedDayPredicate: (DateTime date) {
@@ -69,6 +87,13 @@ class Calendar extends StatelessWidget {
         date.month == selectedDay!.month &&
         date.day == selectedDay!.day;
       },
+      eventLoader: getEventsForDay,
     );
   }
+}
+
+class Event {
+  String title;
+
+  Event(this.title);
 }

@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fms/component/schedule_bottom_sheet.dart';
 import 'package:fms/component/schedule_card.dart';
 import 'package:fms/component/today_banner.dart';
@@ -38,10 +39,15 @@ class _CalendarPageState extends State<CalendarPage> {
       body: SafeArea(
         child: Column(
           children: [
-            Calendar(
-              selectedDay: selectedDay,
-              focusedDay: focusedDay,
-              onDaySelected: onDaySelected,
+            FutureBuilder(
+              future: _httpService.fetchSchedules(selectedDay),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                return Calendar(
+                  selectedDay: selectedDay,
+                  focusedDay: focusedDay,
+                  onDaySelected: onDaySelected,
+                );
+              },
             ),
             SizedBox(height: 8.0,),
             TodayBanner(

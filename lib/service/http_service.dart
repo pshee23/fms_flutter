@@ -15,6 +15,8 @@ abstract class HttpService {
 
   Future<List<Schedule>> fetchSchedules(datetime);
 
+  Future<List<bool>> fetchMonthlySchedule(datetime);
+
   void updateScheduleStatus(lessonHistoryId, status);
 
   void fetchId(isEmployee, loginId);
@@ -40,7 +42,7 @@ class HttpServiceImplementation implements HttpService {
     DateTime dateTime = datetime;
     final id = await storage.read(key: 'id');
     final isEmployee = await storage.read(key: 'isEmployee');
-    print('watchSchedules. body=$datetime, id=$id, isEmployee=$isEmployee');
+    print('watchSchedules. date=$datetime, id=$id, isEmployee=$isEmployee');
     var path = 'member';
     if(isEmployee == 'true') {
       path = 'employee';
@@ -54,6 +56,36 @@ class HttpServiceImplementation implements HttpService {
           'Content-Type': 'application/json',
           'Authorization': 'toyProject1234'
         },
+    );
+
+    var code = response.statusCode;
+    print('get Lesson-History list. code=$code, body=${response.body}');
+
+    final List<Schedule> result = jsonDecode(response.body)
+        .map<Schedule>((json) => Schedule.fromJson(json)).toList();
+    print('get list body. result=$result');
+    return result;
+  }
+
+  @override
+  Future<List<bool>> fetchMonthlySchedule(datetime) async {
+    DateTime dateTime = datetime;
+    final id = await storage.read(key: 'id');
+    final isEmployee = await storage.read(key: 'isEmployee');
+    print('fetchMonthlySchedule. date=$datetime, id=$id, isEmployee=$isEmployee');
+    var path = 'member';
+    if(isEmployee == 'true') {
+      path = 'employee';
+    }
+    var url = '/lesson-history/$path/$id/datetime/${dateTime.year}/${dateTime.month}/${dateTime.day}';
+    print('fetch schedules get. url=$url');
+    final uri = Uri.http(serverUrl, url);
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'toyProject1234'
+      },
     );
 
     var code = response.statusCode;
