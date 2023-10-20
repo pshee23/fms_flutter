@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 class Calendar extends StatelessWidget {
   final DateTime? selectedDay;
   final DateTime focusedDay;
+  final Map<DateTime, List<String>> monthEventCount;
 
   final OnDaySelected? onDaySelected;
 
@@ -12,6 +13,7 @@ class Calendar extends StatelessWidget {
     required this.selectedDay,
     required this.focusedDay,
     required this.onDaySelected,
+    required this.monthEventCount,
     Key? key}) : super(key: key);
 
   @override
@@ -25,14 +27,8 @@ class Calendar extends StatelessWidget {
       fontWeight: FontWeight.w700,
     );
 
-    // TODO
-    Map<DateTime, List<String>> events = {
-      DateTime.utc(2023,10,13) : [ "12", "23" ],
-      DateTime.utc(2022,10,14) : [ "23" ],
-    };
-
     List<String> getEventsForDay(DateTime day) {
-      return events[day] ?? [];
+      return monthEventCount[day] ?? [];
     }
     return TableCalendar(
       locale: 'ko_KR',

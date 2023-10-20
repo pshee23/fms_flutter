@@ -1,7 +1,9 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fms/model/category_colors.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../model/schedule.dart';
@@ -15,7 +17,7 @@ abstract class HttpService {
 
   Future<List<Schedule>> fetchSchedules(datetime);
 
-  Future<List<bool>> fetchMonthlySchedule(datetime);
+  Future<Map<DateTime, List<String>>> fetchMonthlySchedule(datetime);
 
   void updateScheduleStatus(lessonHistoryId, status);
 
@@ -68,7 +70,7 @@ class HttpServiceImplementation implements HttpService {
   }
 
   @override
-  Future<List<bool>> fetchMonthlySchedule(datetime) async {
+  Future<Map<DateTime, List<String>>> fetchMonthlySchedule(datetime) async {
     DateTime dateTime = datetime;
     final id = await storage.read(key: 'id');
     final isEmployee = await storage.read(key: 'isEmployee');
@@ -77,7 +79,7 @@ class HttpServiceImplementation implements HttpService {
     if(isEmployee == 'true') {
       path = 'employee';
     }
-    var url = '/lesson-history/$path/$id/datetime/${dateTime.year}/${dateTime.month}/${dateTime.day}';
+    var url = '/lesson-history/$path/$id/datetime/${dateTime.year}/${dateTime.month}';
     print('fetch schedules get. url=$url');
     final uri = Uri.http(serverUrl, url);
     final response = await http.get(
@@ -91,10 +93,14 @@ class HttpServiceImplementation implements HttpService {
     var code = response.statusCode;
     print('get Lesson-History list. code=$code, body=${response.body}');
 
-    final List<Schedule> result = jsonDecode(response.body)
-        .map<Schedule>((json) => Schedule.fromJson(json)).toList();
-    print('get list body. result=$result');
-    return result;
+    final Map<String, dynamic> result = jsonDecode(response.body);
+    Map<DateTime, List<String>> resultMap = new HashMap<DateTime, List<String>>();
+    result.forEach((key, value) {
+      resultMap[DateTime.parse(key).toUtc()] = List<String>.from(value);
+    });
+    print('get monthly list body. result=$resultMap');
+
+    return resultMap;
   }
 
   @override
