@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fms/model/category_colors.dart';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
+import '../model/Lesson.dart';
 import '../model/schedule.dart';
 
 abstract class HttpService {
@@ -22,6 +22,8 @@ abstract class HttpService {
   void updateScheduleStatus(lessonHistoryId, status);
 
   void fetchId(isEmployee, loginId);
+
+  Future<List<Lesson>> fetchLessons();
 }
 
 class HttpServiceImplementation implements HttpService {
@@ -152,4 +154,20 @@ class HttpServiceImplementation implements HttpService {
     storage.write(key: 'isEmployee', value: isEmployee.toString(),);
   }
 
+  @override
+  Future<List<Lesson>> fetchLessons() async {
+    final uri = Uri.http(serverUrl, '/lesson/list');
+    print('fetchLessons request. uri=$uri');
+    final response = await http.get(uri);
+
+    print('fetchLessons response.body=${response.body}');
+    List<Lesson> resultList = [];
+    final List<dynamic> resultDynamic = jsonDecode(response.body);
+    resultDynamic.forEach((element) {
+      print('element=$element');
+      resultList.add(Lesson.fromJson(element));
+    });
+    print('fetchLessons result=$resultList');
+    return resultList;
+  }
 }
