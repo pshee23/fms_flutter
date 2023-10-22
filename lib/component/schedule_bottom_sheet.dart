@@ -441,8 +441,8 @@ class LessonResult extends StatelessWidget {
                   backgroundColor: Colors.black,
                   // backgroundImage: eachLesson.lessonId == 0 > circularProgress() : null
                 ),
-                title: Text(eachLesson.startDateTime.toString(), style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),),
-                subtitle: Text(eachLesson.lessonId.toString(), style: TextStyle(color: Colors.black, fontSize: 9, fontWeight: FontWeight.bold)),
+                title: Text(eachLesson.lessonName, style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),),
+                subtitle: Text(eachLesson.memberName, style: TextStyle(color: Colors.black, fontSize: 9, fontWeight: FontWeight.bold)),
               ),
             )
           ],
