@@ -2,11 +2,11 @@ import 'package:fms/const/colors.dart';
 import 'package:fms/locator/locator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import '../model/Lesson.dart';
 import '../model/category_colors.dart';
 import '../model/schedule.dart';
 import '../service/http_service.dart';
+import 'lesson_alert_dialog.dart';
 import 'custom_text_field.dart';
 import 'custom_time_field.dart';
 
@@ -33,14 +33,7 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
 
   int? selectedColorId;
 
-  String? lessonText = '';
-
   final HttpService _httpService = locator<HttpService>();
-  TextEditingController searchController = TextEditingController();
-  Future<List<Lesson>>? lessonListResults;
-  emptySearchField() {
-    searchController.clear();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +51,7 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
           child: Padding(
             padding: EdgeInsets.only(bottom: bottomInset),
             child: Padding(
-              padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 16.0),
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 16.0),
               child: Form(
                 key: formKey,
                 autovalidateMode: AutovalidateMode.always,
@@ -66,64 +59,35 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _Time(
-                      onStartTimeSaved: (String? val) {
-                        startTime = val;
-                      },
-                      onEndTimeSaved: (String? val) {
-                        endTime = val;
-                      }
+                        onStartTimeSaved: (String? val) {
+                          startTime = val;
+                        },
+                        onEndTimeSaved: (String? val) {
+                          endTime = val;
+                        }
                     ),
-                    SizedBox(height: 16.0),
-                    Row(
-                      children: [
-                        Icon(Icons.format_list_bulleted_outlined),
-                        SizedBox(width: 10),
-                        Expanded(
-                            child: Text(lessonText!)
-                        ),
-                        ElevatedButton.icon(onPressed: () {
-                          showDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text("Select Lesson"),
-                                  content: Scaffold(
-                                    appBar: SearchHeader(),
-                                    body: lessonListResults == null ? displayAllList() : displayFoundList(),
-                                  )
-                                );
-                              }
-                          );
-                          setState(() {
-                            lessonText = '1:1 PT 수업';
-                          });
-                        }, icon: Icon(Icons.search), label: Text("검색"),),
-                      ]
-                    ),
-                    _Content(
-                      onLessonIdSaved: (String? val) {
-                        lessonId = int.parse(val!);
-                      },
-                      onMemberIdSaved: (String? val) {
-                        memberId = int.parse(val!);
-                      },
-                      onEmployeeIdSaved: (String? val) {
-                        employeeId = int.parse(val!);
+                    const SizedBox(height: 16.0),
+                    LessonAlertDialog(
+                      lessonResult: (Lesson lesson) {
+                        print("@@@@@@@@@@@@@@ lessonResult=$lesson");
+                        lessonId = lesson.lessonId;
+                        memberId = lesson.memberId;
+                        employeeId = lesson.employeeId;
                       },
                     ),
                     SizedBox(height: 16.0),
                     FutureBuilder<List<CategoryColors>>(
                         future: _httpService.fetchCategoryColors(),
                         builder: (context, snapshot) {
-                          if(snapshot.hasData && selectedColorId == null && snapshot.data!.isNotEmpty) {
+                          if (snapshot.hasData && selectedColorId == null &&
+                              snapshot.data!.isNotEmpty) {
                             selectedColorId = snapshot.data![0].colorId;
                           }
                           return _ColorPicker(
                             colors: snapshot.hasData
                                 ? snapshot.data! : [],
                             selectedColorId: selectedColorId,
-                            colorIdSetter: (int id){
+                            colorIdSetter: (int id) {
                               setState(() {
                                 selectedColorId = id;
                               });
@@ -142,87 +106,6 @@ class _ScheduleBottomSheetState extends State<ScheduleBottomSheet> {
           ),
         ),
       ),
-    );
-  }
-
-  AppBar SearchHeader() {
-    return AppBar(
-        automaticallyImplyLeading: false,
-        title: TextFormField(
-          controller: searchController,
-          decoration: InputDecoration(
-            hintText: 'Search here..',
-            hintStyle: TextStyle(
-              color: Colors.lightBlueAccent,
-            ),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightBlueAccent)
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.blue),
-            ),
-            filled: true,
-            prefixIcon: Icon(Icons.person_pin, color: Colors.lightBlueAccent, size:30),
-            suffixIcon: IconButton(icon: Icon(Icons.clear, color: Colors.white,),
-              onPressed: emptySearchField,
-            ),
-          ),
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-          onFieldSubmitted: (str) {
-            print(str);
-            Future<List<Lesson>> lessonList = _httpService.fetchLessons();
-
-            setState(() {
-              lessonListResults = lessonList;
-            });
-          },
-        )
-    );
-  }
-
-  displayAllList() {
-    return Container(
-      child: Center(
-        child: ListView(
-          shrinkWrap: true,
-          children: <Widget>[
-            Icon(Icons.group, color: Colors.grey, size: 15),
-            Text(
-              'Search Lesson',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey,
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  displayFoundList() {
-    return FutureBuilder<List<Lesson>>(
-      future: lessonListResults,
-      builder: (context, snapshot) {
-        if(!snapshot.hasData) {
-          return Text('No DATA');
-        }
-
-        List<LessonResult> searchList = [];
-        List<Lesson>? lessonList = snapshot.data;
-        lessonList!.forEach((element) {
-          LessonResult lessonResult = LessonResult(element);
-          searchList.add(lessonResult);
-        });
-        return ListView(
-           children: searchList,
-        );
-      }
     );
   }
 
@@ -298,7 +181,6 @@ class _Time extends StatelessWidget {
     );
   }
 }
-
 
 class _Content extends StatelessWidget {
   final FormFieldSetter<String> onLessonIdSaved;
@@ -419,35 +301,194 @@ class _SaveButton extends StatelessWidget {
     );
   }
 }
-
-class LessonResult extends StatelessWidget {
-  final Lesson eachLesson;
-  LessonResult(this.eachLesson);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(3),
-      child: Container(
-        color: Colors.white54,
-        child: Column(
-          children: <Widget>[
-            GestureDetector(
-              onTap: () {
-                print('tapped=$eachLesson');
-              },
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.black,
-                  // backgroundImage: eachLesson.lessonId == 0 > circularProgress() : null
-                ),
-                title: Text(eachLesson.lessonName, style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),),
-                subtitle: Text(eachLesson.memberName, style: TextStyle(color: Colors.black, fontSize: 9, fontWeight: FontWeight.bold)),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
+//
+// class AlertBoxDialog extends StatefulWidget {
+//
+//   const AlertBoxDialog({
+//     Key? key}) : super(key: key);
+//
+//   @override
+//   State<AlertBoxDialog> createState() => _AlertBoxDialogState();
+// }
+//
+// class _AlertBoxDialogState extends State<AlertBoxDialog> {
+//   String? lessonText = '';
+//   Lesson? selectedLesson;
+//
+//   final HttpService _httpService = locator<HttpService>();
+//   TextEditingController searchController = TextEditingController();
+//   Future<List<Lesson>>? lessonListResults;
+//
+//   emptySearchField() {
+//     searchController.clear();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Row(
+//         children: [
+//           Icon(Icons.format_list_bulleted_outlined),
+//           SizedBox(width: 10),
+//           Expanded(
+//               child: Text(lessonText!)
+//           ),
+//           ElevatedButton.icon(onPressed: () async {
+//             await showDialog(
+//                 context: context,
+//                 barrierDismissible: true,
+//                 builder: (BuildContext context) {
+//                   return StatefulBuilder(
+//                     builder: (BuildContext context, StateSetter setState) {
+//                       return AlertDialog(
+//                           title: Text("Select Lesson"),
+//                           content: Scaffold(
+//                             appBar: searchHeader(setState),
+//                             body: lessonListResults == null
+//                                 ? displayAllList()
+//                                 : displayFoundList(),
+//                           )
+//                       );
+//                     }
+//                   );
+//                 }
+//             );
+//           }, icon: Icon(Icons.search), label: Text("검색"),),
+//
+//         ]
+//     );
+//   }
+//
+//   AppBar searchHeader(StateSetter setState) {
+//     return AppBar(
+//         automaticallyImplyLeading: false,
+//         title: TextFormField(
+//           controller: searchController,
+//           decoration: InputDecoration(
+//             hintText: 'Search here..',
+//             hintStyle: TextStyle(
+//               color: Colors.lightBlueAccent,
+//             ),
+//             enabledBorder: UnderlineInputBorder(
+//                 borderSide: BorderSide(color: Colors.lightBlueAccent)
+//             ),
+//             focusedBorder: UnderlineInputBorder(
+//               borderSide: BorderSide(color: Colors.blue),
+//             ),
+//             filled: true,
+//             // prefixIcon: Icon(Icons.person_pin, color: Colors.lightBlueAccent, size:30),
+//             suffixIcon: IconButton(icon: Icon(Icons.clear, color: Colors.white,),
+//               onPressed: emptySearchField,
+//             ),
+//           ),
+//           style: TextStyle(
+//             fontSize: 18,
+//             color: Colors.white,
+//           ),
+//           onFieldSubmitted: (str) {
+//             print('onFieldSubmitted=$str');
+//             Future<List<Lesson>> lessonList = _httpService.fetchLessons();
+//
+//             setState(() {
+//               lessonListResults = lessonList;
+//               print('onFieldSubmitted result=$lessonListResults');
+//             });
+//           },
+//         )
+//     );
+//   }
+//
+//   displayAllList() {
+//     return Container(
+//       child: Center(
+//         child: ListView(
+//           shrinkWrap: true,
+//           children: <Widget>[
+//             Icon(Icons.group, color: Colors.grey, size: 15),
+//             Text(
+//               'Search Lesson',
+//               textAlign: TextAlign.center,
+//               style: TextStyle(
+//                 color: Colors.grey,
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 20,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   displayFoundList() {
+//     return FutureBuilder(
+//         future: lessonListResults,
+//         builder: (context, snapshot) {
+//           if(!snapshot.hasData) {
+//             return Text('No DATA');
+//           }
+//           List<LessonResult> searchList = [];
+//           List<Lesson>? lessonList = snapshot.data;
+//
+//           lessonList!.forEach((element) {
+//             LessonResult lessonResult = LessonResult(
+//               eachLesson: element,
+//               lessonSetter: (Lesson lesson) {
+//                 setState(() {
+//                   selectedLesson = lesson;
+//                   lessonText = lesson.lessonName;
+//                 });
+//               },
+//             );
+//             searchList.add(lessonResult);
+//           });
+//
+//           return ListView(
+//             children: searchList,
+//           );
+//         }
+//     );
+//   }
+//
+// }
+//
+// typedef LessonSetter = void Function(Lesson lesson);
+//
+// class LessonResult extends StatelessWidget {
+//   final Lesson eachLesson;
+//   final LessonSetter lessonSetter;
+//
+//   // LessonResult(this.eachLesson, this.onTapped);
+//   const LessonResult({
+//     required this.eachLesson,
+//     required this.lessonSetter,
+//     Key? key}) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: EdgeInsets.all(3),
+//       child: Container(
+//         color: Colors.white54,
+//         child: Column(
+//           children: <Widget>[
+//             GestureDetector(
+//               onTap: () {
+//                 print('tapped=$eachLesson');
+//                 lessonSetter(eachLesson);
+//                 Navigator.pop(context);
+//               },
+//               child: ListTile(
+//                 leading: CircleAvatar(
+//                   backgroundColor: Colors.black,
+//                   // backgroundImage: eachLesson.lessonId == 0 > circularProgress() : null
+//                 ),
+//                 title: Text(eachLesson.lessonName, style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),),
+//                 subtitle: Text(eachLesson.memberName, style: TextStyle(color: Colors.black, fontSize: 9, fontWeight: FontWeight.bold)),
+//               ),
+//             )
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

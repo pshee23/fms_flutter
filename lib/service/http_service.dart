@@ -23,7 +23,7 @@ abstract class HttpService {
 
   void fetchId(isEmployee, loginId);
 
-  Future<List<Lesson>> fetchLessons();
+  Future<List<Lesson>> fetchLessonsByEmployee();
 }
 
 class HttpServiceImplementation implements HttpService {
@@ -155,8 +155,13 @@ class HttpServiceImplementation implements HttpService {
   }
 
   @override
-  Future<List<Lesson>> fetchLessons() async {
-    final uri = Uri.http(serverUrl, '/lesson/list');
+  Future<List<Lesson>> fetchLessonsByEmployee() async {
+    final id = await storage.read(key: 'id');
+    final uri = Uri.http(serverUrl, '/lesson/list/employee/$id');
+    return _fetchLessons(uri);
+  }
+
+  Future<List<Lesson>> _fetchLessons(uri) async {
     print('fetchLessons request. uri=$uri');
     final response = await http.get(uri);
 
@@ -167,7 +172,9 @@ class HttpServiceImplementation implements HttpService {
       print('element=$element');
       resultList.add(Lesson.fromJson(element));
     });
-    print('fetchLessons result=$resultList');
+    resultList.forEach((element) {
+      print('fetchLessons result=$element');
+    });
     return resultList;
   }
 }
