@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 
 import '../locator/locator.dart';
 import '../model/schedule.dart';
 import '../service/http_service.dart';
 
-class ScheduleInfoSheet extends StatefulWidget {
+class ScheduleInfoSheet extends StatelessWidget {
   final Schedule scheduleInfo;
 
   const ScheduleInfoSheet({
@@ -14,20 +13,13 @@ class ScheduleInfoSheet extends StatefulWidget {
     Key? key}) : super(key: key);
 
   @override
-  State<ScheduleInfoSheet> createState() => _ScheduleInfoSheetState();
-}
-
-class _ScheduleInfoSheetState extends State<ScheduleInfoSheet> {
-
-  final HttpService _httpService = locator<HttpService>();
-
-  @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final HttpService httpService = locator<HttpService>();
 
     return GestureDetector(
       onTap: () {
-        FocusScope.of(context).requestFocus(FocusNode()); // 빈 공간 누르면 키보드 내려가도록
+        Navigator.pop(context);
       },
       child: SafeArea(
         child: Container(
@@ -47,29 +39,48 @@ class _ScheduleInfoSheetState extends State<ScheduleInfoSheet> {
                   ),
                 ),
                 _StatusBox(
-                  label: '상태', value: widget.scheduleInfo.status,
+                  label: '상태', value: scheduleInfo.status,
                 ),
                 _TextBox(
-                  label: '수업명', value: widget.scheduleInfo.lessonName,
+                  label: '수업명', value: scheduleInfo.lessonName,
                 ),
                 _TextBox(
-                  label: '강사', value: widget.scheduleInfo.employeeName,
+                  label: '강사', value: scheduleInfo.employeeName,
                 ),
                 _TextBox(
-                  label: '수강생', value: widget.scheduleInfo.memberName,
+                  label: '수강생', value: scheduleInfo.memberName,
                 ),
                 _TextBox(
-                  label: '시작 시간', value: DateFormat("yyyy-MM-dd hh:mm:ss").format(widget.scheduleInfo.startDateTime),
+                  label: '시작 시간', value: DateFormat("yyyy-MM-dd hh:mm:ss").format(scheduleInfo.startDateTime),
                 ),
                 _TextBox(
-                  label: '종료 시간', value: DateFormat("yyyy-MM-dd hh:mm:ss").format(widget.scheduleInfo.endDateTime),
+                  label: '종료 시간', value: DateFormat("yyyy-MM-dd hh:mm:ss").format(scheduleInfo.endDateTime),
                 ),
                 Row(
                   children: [
                     ElevatedButton.icon(
                       icon: Icon(Icons.delete),
                       onPressed: (){
-                        _httpService.updateScheduleStatus(widget.scheduleInfo.lessonHistoryId, "DELETED");
+                        // TODO 수업 완료한건 삭제 못하도록
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text("수업 상태 변경"),
+                                content: const Text("수업을 삭제하시겠습니까?"),
+                                actions: <Widget>[
+                                  ElevatedButton(onPressed: () {
+                                    httpService.updateScheduleStatus(scheduleInfo.lessonHistoryId, "DELETED");
+                                    Navigator.pop(context);Navigator.pop(context);
+                                  }, child: const Text("네")),
+                                  ElevatedButton(onPressed: () {Navigator.pop(context);},
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                    child: const Text("아니요"),
+                                  ),
+                                ],
+                              );
+                            }
+                        );
                       },
                       label: Text('수업 삭제'),
                       style: ElevatedButton.styleFrom(
@@ -81,7 +92,26 @@ class _ScheduleInfoSheetState extends State<ScheduleInfoSheet> {
                     ElevatedButton.icon(
                       icon: Icon(Icons.cancel),
                       onPressed: (){
-                        _httpService.updateScheduleStatus(widget.scheduleInfo.lessonHistoryId, "CANCELED");
+                        // TODO 수업 완료한건 취소 못하도록
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text("수업 상태 변경"),
+                                content: const Text("수업을 취소하시겠습니까?"),
+                                actions: <Widget>[
+                                  ElevatedButton(onPressed: () {
+                                    httpService.updateScheduleStatus(scheduleInfo.lessonHistoryId, "CANCELED");
+                                    Navigator.pop(context);Navigator.pop(context);
+                                  }, child: const Text("네")),
+                                  ElevatedButton(onPressed: () {Navigator.pop(context);},
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                    child: const Text("아니요"),
+                                  ),
+                                ],
+                              );
+                            }
+                        );
                       },
                       label: Text('수업 취소'),
                       style: ElevatedButton.styleFrom(
@@ -93,7 +123,25 @@ class _ScheduleInfoSheetState extends State<ScheduleInfoSheet> {
                     ElevatedButton.icon(
                       icon: Icon(Icons.check),
                       onPressed: (){
-                        _httpService.updateScheduleStatus(widget.scheduleInfo.lessonHistoryId, "FINISHED");
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text("수업 상태 변경"),
+                                content: const Text("수업 완료로 변경하시겠습니까?"),
+                                actions: <Widget>[
+                                  ElevatedButton(onPressed: () {
+                                    httpService.updateScheduleStatus(scheduleInfo.lessonHistoryId, "FINISHED");
+                                    Navigator.pop(context);Navigator.pop(context);
+                                  }, child: const Text("네")),
+                                  ElevatedButton(onPressed: () {Navigator.pop(context);}, 
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                    child: const Text("아니요"),
+                                  ),
+                                ],
+                              );
+                            }
+                        );
                       },
                       label: Text('수업 완료'),
                       style: ElevatedButton.styleFrom(
@@ -176,7 +224,6 @@ class _StatusBox extends StatelessWidget {
     }
   }
 }
-
 
 class _TextBox extends StatelessWidget {
   final String label;

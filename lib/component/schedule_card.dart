@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fms/component/schedule_info_sheet.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../const/colors.dart';
 import '../model/schedule.dart';
@@ -10,12 +11,14 @@ class ScheduleCard extends StatelessWidget {
   final DateTime endTime;
   final Schedule scheduleInfo;
   final Color color;
+  final OnDaySelected? onDaySelected;
 
   const ScheduleCard({
     required this.startTime,
     required this.endTime,
     required this.scheduleInfo,
     required this. color,
+    required this.onDaySelected,
     Key? key}) : super(key: key);
 
   @override
@@ -30,7 +33,7 @@ class ScheduleCard extends StatelessWidget {
                 scheduleInfo: scheduleInfo
             );
           },
-        );
+        ).whenComplete(() => onDaySelected!(startTime, endTime));
       },
       child: Container(
         decoration: BoxDecoration(
