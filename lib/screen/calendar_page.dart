@@ -39,27 +39,10 @@ class _CalendarPageState extends State<CalendarPage> {
       body: SafeArea(
         child: Column(
           children: [
-            FutureBuilder(
-              future: _httpService.fetchMonthlySchedule(selectedDay),
-              builder: (BuildContext context, AsyncSnapshot<Map<DateTime, List<String>>> snapshot) {
-                if(snapshot.hasData == false) {
-                  return Text("No Schedule");
-                }
-                print('@@@@@@@@@. Data=${snapshot.data}');
-                return Calendar(
-                  selectedDay: selectedDay,
-                  focusedDay: focusedDay,
-                  onDaySelected: onDaySelected,
-                  monthEventCount: snapshot.data!,
-                );
-              },
-              // builder: (BuildContext context, AsyncSnapshot snapshot) {
-              //   return Calendar(
-              //     selectedDay: selectedDay,
-              //     focusedDay: focusedDay,
-              //     onDaySelected: onDaySelected,
-              //   );
-              // },
+            Calendar(
+              selectedDay: selectedDay,
+              focusedDay: focusedDay,
+              onDaySelected: onDaySelected,
             ),
             SizedBox(height: 8.0,),
             TodayBanner(
