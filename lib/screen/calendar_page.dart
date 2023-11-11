@@ -23,12 +23,6 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calendar'),
-        // actions: <Widget>[
-        //   IconButton(onPressed: (){logout();}, icon: Icon(Icons.exit_to_app))
-        // ],
-      ),
       floatingActionButton: renderFloatingActionButton(),
       body: SafeArea(
         child: Column(

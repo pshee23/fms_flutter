@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:fms/screen/personal_info.dart';
+import 'package:fms/screen/settings.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../locator/locator.dart';
@@ -109,33 +111,64 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [CalendarPage(), PersonalInfo(), Settings()];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Home Page'),
+          automaticallyImplyLeading: false,
           actions: <Widget>[
             IconButton(onPressed: (){logout();}, icon: Icon(Icons.exit_to_app))
           ],
         ),
-        body: Container(
-          margin: EdgeInsets.all(30.0),
-          child: GridView.count(
-            scrollDirection: Axis.vertical,
-            crossAxisCount: 2,
-            mainAxisSpacing: 30.0,
-            crossAxisSpacing: 30.0,
-            children: [
-              ElevatedButton(onPressed: (){checkAuthorization('/api/user');}, child: Text("USER")),
-              ElevatedButton(onPressed: (){checkAuthorization('/api/manager');}, child: Text("MANAGER")),
-              ElevatedButton(onPressed: (){Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => CalendarPage()),
-              );}, child: Text("CALENDAR")),
-            ],
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month),
+            label: '스케쥴',
           ),
-      )
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '내정보',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: '설정',
+          )
+        ],
+        currentIndex: _currentIndex,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.blueGrey,
+        onTap: _onItemTapped,
+      ),
+      //   body: Container(
+      //     margin: EdgeInsets.all(30.0),
+      //     child: GridView.count(
+      //       scrollDirection: Axis.vertical,
+      //       crossAxisCount: 2,
+      //       mainAxisSpacing: 30.0,
+      //       crossAxisSpacing: 30.0,
+      //       children: [
+      //         ElevatedButton(onPressed: (){checkAuthorization('/api/user');}, child: Text("USER")),
+      //         ElevatedButton(onPressed: (){checkAuthorization('/api/manager');}, child: Text("MANAGER")),
+      //         ElevatedButton(onPressed: (){Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //               builder: (context) => CalendarPage()),
+      //         );}, child: Text("CALENDAR")),
+      //       ],
+      //     ),
+      // )
     );
   }
 }
