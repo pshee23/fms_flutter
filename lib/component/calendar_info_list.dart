@@ -20,30 +20,38 @@ class CalendarInfoList extends StatelessWidget {
   Widget build(BuildContext context) {
     final HttpService httpService = locator<HttpService>();
 
-    return Column(
-      children: [
-        TodayBanner(
-            selectedDay: selectedDay,
-            scheduleCount: 3
-        ),
-        const SizedBox(height: 8.0,),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: FutureBuilder(
-              future: httpService.fetchSchedules(selectedDay),
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                if(snapshot.hasData == false) {
-                  return Text("No Schedule");
-                }
+    return FutureBuilder(
+        future: httpService.fetchSchedules(selectedDay),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if(snapshot.hasData == false) {
+            return Column(
+              children: [
+                TodayBanner(
+                    selectedDay: selectedDay,
+                    scheduleCount: 0
+                ),
+                const SizedBox(height: 8.0,),
+                Text("No Schedule"),
+              ],
+            );
+          }
 
-                if(snapshot.hasError) {
-                  return Center(
-                    child: Text(snapshot.error.toString()),
-                  );
-                }
-                List<Schedule> scheduleList = snapshot.data;
-
-                return ListView.separated(
+          if(snapshot.hasError) {
+            return Center(
+              child: Text(snapshot.error.toString()),
+            );
+          }
+          List<Schedule> scheduleList = snapshot.data;
+          return Column(
+            children: [
+              TodayBanner(
+                  selectedDay: selectedDay,
+                  scheduleCount: scheduleList.length
+              ),
+              const SizedBox(height: 8.0,),
+              Container(
+                height: 253, // TODO overflow
+                child: ListView.separated(
                     itemCount: scheduleList.length,
                     separatorBuilder: (context, index) {
                       return SizedBox(height: 8.0,);
@@ -58,11 +66,11 @@ class CalendarInfoList extends StatelessWidget {
                         color: Colors.red,
                         onDaySelected: onDaySelected,
                       );
-                    });
-              }
-          ),
-        ),
-      ],
+                    }),
+              ),
+            ],
+          );
+        }
     );
   }
 }
