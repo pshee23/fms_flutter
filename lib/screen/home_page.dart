@@ -9,6 +9,7 @@ import '../locator/locator.dart';
 import '../model/Login.dart';
 import '../service/http_service.dart';
 import 'calendar_page.dart';
+import 'member_list.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -113,7 +114,7 @@ class _HomePageState extends State<HomePage> {
 
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [CalendarPage(), PersonalInfo(), Settings()];
+  final List<Widget> _pages = [CalendarPage(), MemberList(), PersonalInfo(), Settings()];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -123,6 +124,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -136,6 +138,11 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
               icon: Icon(Icons.calendar_month),
             label: '스케쥴',
+          ),
+          // TODO employee만 보이도록 해야함
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: '회원정보',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -151,24 +158,6 @@ class _HomePageState extends State<HomePage> {
         unselectedItemColor: Colors.blueGrey,
         onTap: _onItemTapped,
       ),
-      //   body: Container(
-      //     margin: EdgeInsets.all(30.0),
-      //     child: GridView.count(
-      //       scrollDirection: Axis.vertical,
-      //       crossAxisCount: 2,
-      //       mainAxisSpacing: 30.0,
-      //       crossAxisSpacing: 30.0,
-      //       children: [
-      //         ElevatedButton(onPressed: (){checkAuthorization('/api/user');}, child: Text("USER")),
-      //         ElevatedButton(onPressed: (){checkAuthorization('/api/manager');}, child: Text("MANAGER")),
-      //         ElevatedButton(onPressed: (){Navigator.push(
-      //           context,
-      //           MaterialPageRoute(
-      //               builder: (context) => CalendarPage()),
-      //         );}, child: Text("CALENDAR")),
-      //       ],
-      //     ),
-      // )
     );
   }
 }

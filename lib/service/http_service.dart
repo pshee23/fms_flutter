@@ -6,6 +6,7 @@ import 'package:fms/model/category_colors.dart';
 import 'package:http/http.dart' as http;
 
 import '../model/Lesson.dart';
+import '../model/Member.dart';
 import '../model/schedule.dart';
 
 abstract class HttpService {
@@ -24,6 +25,8 @@ abstract class HttpService {
   void fetchId(isEmployee, loginId);
 
   Future<List<Lesson>> fetchLessonsByEmployee();
+
+  Future<List<Member>> fetchMemberByEmployee();
 }
 
 class HttpServiceImplementation implements HttpService {
@@ -174,6 +177,26 @@ class HttpServiceImplementation implements HttpService {
     });
     resultList.forEach((element) {
       print('fetchLessons result=$element');
+    });
+    return resultList;
+  }
+
+  @override
+  Future<List<Member>> fetchMemberByEmployee() async {
+    final id = await storage.read(key: 'id');
+    final uri = Uri.http(serverUrl, '/member/list/employee/$id');
+
+    print('fetchMemberByEmployee request. uri=$uri');
+    final response = await http.get(uri);
+
+    List<Member> resultList = [];
+    final List<dynamic> resultDynamic = jsonDecode(response.body);
+    resultDynamic.forEach((element) {
+      print('element=$element');
+      resultList.add(Member.fromJson(element));
+    });
+    resultList.forEach((element) {
+      print('fetchMemberByEmployee result=$element');
     });
     return resultList;
   }
