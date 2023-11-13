@@ -33,9 +33,25 @@ class _MemberListState extends State<MemberList> {
   Widget build(BuildContext context) {
     searchResultList = _httpService.fetchMemberByEmployee();
 
-    return Scaffold(
-      appBar: searchHeader(setState),
-      body: displayFoundList(),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "회원 검색",
+            style: TextStyle(
+                fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Scaffold(
+            appBar: searchHeader(setState),
+            body: displayFoundList(),
+          ),
+        ),
+      ],
     );
   }
 
