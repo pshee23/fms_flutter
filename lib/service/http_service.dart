@@ -27,6 +27,8 @@ abstract class HttpService {
   Future<List<Lesson>> fetchLessonsByEmployee();
 
   Future<List<Member>> fetchMemberByEmployee();
+
+  Future<List<Member>> fetchMemberByBranch();
 }
 
 class HttpServiceImplementation implements HttpService {
@@ -184,7 +186,7 @@ class HttpServiceImplementation implements HttpService {
   @override
   Future<List<Member>> fetchMemberByEmployee() async {
     final id = await storage.read(key: 'id');
-    final uri = Uri.http(serverUrl, '/member/list/employee/$id');
+    final uri = Uri.http(serverUrl, '/member/branch/$id');
 
     print('fetchMemberByEmployee request. uri=$uri');
     final response = await http.get(uri);
@@ -197,6 +199,26 @@ class HttpServiceImplementation implements HttpService {
     });
     resultList.forEach((element) {
       print('fetchMemberByEmployee result=$element');
+    });
+    return resultList;
+  }
+
+  @override
+  Future<List<Member>> fetchMemberByBranch() async {
+    final id = await storage.read(key: 'id');
+    final uri = Uri.http(serverUrl, '/member/branch/employee/$id');
+
+    print('fetchMemberByBranch request. uri=$uri');
+    final response = await http.get(uri);
+
+    List<Member> resultList = [];
+    final List<dynamic> resultDynamic = jsonDecode(response.body);
+    resultDynamic.forEach((element) {
+      print('element=$element');
+      resultList.add(Member.fromJson(element));
+    });
+    resultList.forEach((element) {
+      print('fetchMemberByBranch result=$element');
     });
     return resultList;
   }

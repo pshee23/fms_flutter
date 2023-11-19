@@ -20,6 +20,10 @@ class _MemberListState extends State<MemberList> {
 
   String searchText = '';
 
+  bool isNameDownSort = true;
+  bool isCreateDownSort = true;
+  bool isMyMemberSearch = true;
+
   emptySearchField() {
     searchController.clear();
     setState(() {
@@ -31,18 +35,68 @@ class _MemberListState extends State<MemberList> {
 
   @override
   Widget build(BuildContext context) {
-    searchResultList = _httpService.fetchMemberByEmployee();
-
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+        const Padding(
+          padding: EdgeInsets.all(16.0),
           child: Text(
             "회원 검색",
             style: TextStyle(
                 fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+          child: Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      isNameDownSort = (isNameDownSort == true) ? false : true;
+                    });
+                  },
+                  child: Row(
+                    children: [
+                      const Text("이름순"),
+                      const SizedBox(width: 10,),
+                      Icon(isNameDownSort==true ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10,),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      isCreateDownSort = (isCreateDownSort == true) ? false : true;
+                    });
+                  },
+                  child: Row(
+                    children: [
+                      const Text("생성순"),
+                      const SizedBox(width: 10,),
+                      Icon(isCreateDownSort==true ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10,),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  onPressed: () {
+                    setState(() {
+                      isMyMemberSearch = (isMyMemberSearch == true) ? false : true;
+                    });
+                  },
+                  child: Row(
+                    children: [
+                      isMyMemberSearch==true ? const Text("회원 전체") : const Text("담당 회원"),
+                      const SizedBox(width: 10,),
+                      Icon(isMyMemberSearch==true ? Icons.people : Icons.person, color: Colors.white,),
+                    ],
+                  ),
+                ),
+              ]
           ),
         ),
         Expanded(
@@ -56,11 +110,12 @@ class _MemberListState extends State<MemberList> {
   }
 
   displayFoundList() {
+    searchResultList = (isMyMemberSearch == true ? _httpService.fetchMemberByEmployee() : _httpService.fetchMemberByBranch());
     return FutureBuilder(
         future: searchResultList,
         builder: (context, snapshot) {
           if(!snapshot.hasData) {
-            return Text('No DATA');
+            return const Text('No DATA');
           }
           List<MemberResult> searchList = [];
           List<Member>? memberList = snapshot.data;
@@ -80,6 +135,18 @@ class _MemberListState extends State<MemberList> {
               searchList.add(memberResult);
             }
           });
+
+          if(isNameDownSort) {
+            searchList.sort((b, a) => a.eachMember.name.compareTo(b.eachMember.name));
+          } else {
+            searchList.sort((a, b) => a.eachMember.name.compareTo(b.eachMember.name));
+          }
+
+          if(isCreateDownSort) {
+            searchList.sort((b, a) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
+          } else {
+            searchList.sort((a, b) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
+          }
 
           return ListView(
             children: searchList,
