@@ -186,7 +186,7 @@ class HttpServiceImplementation implements HttpService {
   @override
   Future<List<Member>> fetchMemberByEmployee() async {
     final id = await storage.read(key: 'id');
-    final uri = Uri.http(serverUrl, '/member/branch/$id');
+    final uri = Uri.http(serverUrl, '/member/employee/$id');
 
     print('fetchMemberByEmployee request. uri=$uri');
     final response = await http.get(uri);

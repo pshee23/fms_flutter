@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fms/component/member_info_page.dart';
 
 import '../locator/locator.dart';
 import '../model/Member.dart';
@@ -20,8 +21,8 @@ class _MemberListState extends State<MemberList> {
 
   String searchText = '';
 
-  bool isNameDownSort = true;
-  bool isCreateDownSort = true;
+  int isNameDownSort = 0; // 1: ASC 0: NONE, -1: DESC
+  int isCreateDownSort = 0;
   bool isMyMemberSearch = true;
 
   emptySearchField() {
@@ -30,8 +31,6 @@ class _MemberListState extends State<MemberList> {
       searchText = '';
     });
   }
-
-  // TODO search none registered branch member list
 
   @override
   Widget build(BuildContext context) {
@@ -54,14 +53,15 @@ class _MemberListState extends State<MemberList> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      isNameDownSort = (isNameDownSort == true) ? false : true;
+                      isNameDownSort = (isNameDownSort == 1) ? -1 : 1;
+                      isCreateDownSort = 0;
                     });
                   },
                   child: Row(
                     children: [
                       const Text("이름순"),
                       const SizedBox(width: 10,),
-                      Icon(isNameDownSort==true ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
+                      Icon(isNameDownSort == -1 ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
                     ],
                   ),
                 ),
@@ -69,14 +69,15 @@ class _MemberListState extends State<MemberList> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      isCreateDownSort = (isCreateDownSort == true) ? false : true;
+                      isCreateDownSort = (isCreateDownSort == 1) ? -1 : 1;
+                      isNameDownSort = 0;
                     });
                   },
                   child: Row(
                     children: [
                       const Text("생성순"),
                       const SizedBox(width: 10,),
-                      Icon(isCreateDownSort==true ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
+                      Icon(isCreateDownSort == -1 ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
                     ],
                   ),
                 ),
@@ -111,6 +112,7 @@ class _MemberListState extends State<MemberList> {
 
   displayFoundList() {
     searchResultList = (isMyMemberSearch == true ? _httpService.fetchMemberByEmployee() : _httpService.fetchMemberByBranch());
+
     return FutureBuilder(
         future: searchResultList,
         builder: (context, snapshot) {
@@ -136,15 +138,15 @@ class _MemberListState extends State<MemberList> {
             }
           });
 
-          if(isNameDownSort) {
+          if(isNameDownSort == -1) {
             searchList.sort((b, a) => a.eachMember.name.compareTo(b.eachMember.name));
-          } else {
+          } else if(isNameDownSort == 1) {
             searchList.sort((a, b) => a.eachMember.name.compareTo(b.eachMember.name));
           }
 
-          if(isCreateDownSort) {
+          if(isCreateDownSort == -1) {
             searchList.sort((b, a) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
-          } else {
+          } else if(isCreateDownSort == 1){
             searchList.sort((a, b) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
           }
 
@@ -210,14 +212,31 @@ class MemberResult extends StatelessWidget {
           children: <Widget>[
             GestureDetector(
               onTap: () {
-                // TODO specific member info
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        var begin = const Offset(1.0, 0);
+                        var end = Offset.zero;
+                        var curve = Curves.ease;
+                        var tween = Tween(
+                          begin: begin,
+                          end: end,
+                        ).chain(
+                          CurveTween(curve: curve),
+                        );
+                        return SlideTransition(position: animation.drive(tween),child: child,);
+                      },
+                    pageBuilder: (context, animation, secondaryAnimation) => MemberInfoPage(eachMember: eachMember,),
+                    fullscreenDialog: false,
+                  ),
+                );
               },
               child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.black,
-                ),
-                title: Text(eachMember.name, style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),),
-                subtitle: Text(eachMember.phoneNumber, style: TextStyle(color: Colors.black, fontSize: 9, fontWeight: FontWeight.bold)),
+                leading: CircleAvatar(child: Icon(Icons.face),backgroundColor: Colors.blue,),
+                title: Text(eachMember.name, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
+                subtitle: Text(eachMember.phoneNumber, style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+                trailing: const Icon(Icons.keyboard_arrow_right),
               ),
             )
           ],
