@@ -229,28 +229,15 @@ class HttpServiceImplementation implements HttpService {
   Future<Member> fetchPersonalInfo() async {
     final id = await storage.read(key: 'id');
     final isEmployee = await storage.read(key: 'isEmployee');
-    print('fetchPersonalInfo start. id=$id, isEmployee=$isEmployee');
+
     String path = (isEmployee != null && isEmployee!.contains("true")) ? 'employee' : 'member';
 
     final uri = Uri.http(serverUrl, '/$path/$id');
 
-    //{"memberId":1,"branchId":1,"employeeId":1,"name":"박세희","address":"aaaa","phoneNumber":"888-8888-8888","loginId":"sehee23","loginPw":"$2a$10$gIZf3oz.JAvMOc8mDt1y9eqZzJM/lOkvQzbCRyKK8zhkp3Wp3OED.","role":"ROLE_USER"}
-    //{"employeeId":1,"branchId":1,"name":"아무개","address":"songpa-gu","phoneNumber":"010-8888-6666","loginId":"sehee99","loginPw":null,"role":"ROLE_MANAGER","status":null}
     print('fetchPersonalInfo request. uri=$uri');
     final response = await http.get(uri);
-    print('fetchPersonalInfo response. body=${response.body}');
 
-    // TODO get이 안됨~~
-    // final Member result = jsonDecode(response.body)
-    //     .map<Member>((json) => Member.fromJson(json));
-    Member result = Member(1, "name", 1, "address", "phoneNumber", "status");
-    final List<dynamic> resultDynamic = jsonDecode(response.body);
-    resultDynamic.forEach((element) {
-      print('element=$element');
-      print('element=${Member.fromJson(element)}');
-      result = Member.fromJson(element);
-    });
-
-    return result;
+    final dynamic resultDynamic = jsonDecode(response.body);
+    return Member.fromJson(resultDynamic);
   }
 }

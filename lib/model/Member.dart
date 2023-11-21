@@ -1,13 +1,13 @@
 class Member {
-  final int memberId;
-  final String name;
+  int memberId;
+  String name;
 
-  final int employeeId;
+  int employeeId;
 
-  final String address;
-  final String phoneNumber;
+  String address;
+  String phoneNumber;
 
-  final String status;
+  String status;
 
   Member(
       this.memberId,
@@ -18,13 +18,11 @@ class Member {
       this.status,
   );
 
-  set name(String name) {
-    this.name = name;
+  void setName(String val) {
+    name = val;
   }
 
-  set phoneNumber(String phoneNumber) {
-    this.phoneNumber = phoneNumber;
-  }
+  set setPhoneNumber(String val) => val;
 
   Member.fromJson(Map<String, dynamic> json):
         memberId = int.parse("${json['memberId'] ?? '0'}"),
@@ -51,4 +49,5 @@ class Member {
       'address=$address, '
       'phoneNumber=$phoneNumber, '
       'status=$status';
+
 }

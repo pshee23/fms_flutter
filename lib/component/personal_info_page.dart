@@ -19,8 +19,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
 
   Future<Member>? member;
   bool isChange = false;
-
-  // TODO get Member/Employee Info
+  Member? tmpMember;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +33,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         }
 
         Member? member = snapshot.data;
+        tmpMember = member;
 
         return Form(
           key: formKey,
@@ -75,12 +75,13 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                 ),
               ),
               _ManageInfo(isChange : isChange, label: '이름', value: member!.name, onSaved: (val){
-                print("???? onSaved? name");
-                // tmpName = val;
+                print("???? onSaved111? name=$val. mem=$tmpMember");
+                tmpMember!.setName(val);
+                print("???? onSaved222? name=$val. mem=$tmpMember");
               },),
               _ManageInfo(isChange : isChange, label: '전화 번호', value: member!.phoneNumber, onSaved: (val){
-                print("???? onSaved? phone");
-                // tmpPhoneNum = val;
+                print("???? onSaved? phone=$val. mem=$tmpMember");
+                tmpMember!.phoneNumber = val;
               },),
             ],
           ),
@@ -107,6 +108,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         // validation 이 성공하면 폼 저장하기
         formKey.currentState!.save();
 
+        print("tmpMember=$tmpMember");
         Get.snackbar(
           '저장완료!',
           '폼 저장이 완료되었습니다!',
