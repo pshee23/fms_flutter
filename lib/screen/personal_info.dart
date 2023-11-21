@@ -10,15 +10,8 @@ class PersonalInfo extends StatefulWidget {
 }
 
 class _PersonalInfoState extends State<PersonalInfo> {
-
-  String name = "박세희";
-  String phoneNumber = "010-1234-5678";
-
   @override
   Widget build(BuildContext context) {
-    return PersonalInfoPage(
-        name: name,
-        phoneNumber: phoneNumber
-    );
+    return PersonalInfoPage();
   }
 }

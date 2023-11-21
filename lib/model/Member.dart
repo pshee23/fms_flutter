@@ -18,6 +18,14 @@ class Member {
       this.status,
   );
 
+  set name(String name) {
+    this.name = name;
+  }
+
+  set phoneNumber(String phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
+
   Member.fromJson(Map<String, dynamic> json):
         memberId = int.parse("${json['memberId'] ?? '0'}"),
         name = json['name'] ?? 'ERROR?',

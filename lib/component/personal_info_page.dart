@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../locator/locator.dart';
+import '../model/Member.dart';
+import '../service/http_service.dart';
 
 class PersonalInfoPage extends StatefulWidget {
-  final String name;
-  final String phoneNumber;
-  
   const PersonalInfoPage({
-    required this.name, 
-    required this.phoneNumber,
     Key? key}) : super(key: key);
 
   @override
@@ -14,45 +14,79 @@ class PersonalInfoPage extends StatefulWidget {
 }
 
 class _PersonalInfoPageState extends State<PersonalInfoPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(35.0),
-          child: Text(
-            "개인 정보",
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 25),
-          ),
-        ),
-        _ManageInfo(label: '이름', value: widget.name),
-        _ManageInfo(label: '전화 번호', value: widget.phoneNumber),
-      ],
-    );
-  }
-}
+  final formKey = GlobalKey<FormState>();
+  final HttpService _httpService = locator<HttpService>();
 
-class _ManageInfo extends StatefulWidget {
-  final String label;
-  final String value;
-
-  const _ManageInfo({
-    required this.label,
-    required this.value,
-    Key? key}) : super(key: key);
-
-  @override
-  State<_ManageInfo> createState() => _ManageInfoState();
-}
-
-class _ManageInfoState extends State<_ManageInfo> {
+  Future<Member>? member;
   bool isChange = false;
 
+  // TODO get Member/Employee Info
+
   @override
   Widget build(BuildContext context) {
-    return (isChange == false) ?
-        _TextBox(label: widget.label, value: widget.value, changeMode: changeMode)
-        : _EditBox(label: widget.label, value: widget.value,);
+    member = _httpService.fetchPersonalInfo();
+
+    return FutureBuilder(
+      future: member,
+      builder: (context, snapshot) {
+        if(!snapshot.hasData) {
+          return const Text('No DATA');
+        }
+
+        Member? member = snapshot.data;
+
+        return Form(
+          key: formKey,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(35.0),
+                child: Text(
+                  "개인 정보",
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 25),
+                ),
+              ),
+              Container(
+                color: Colors.pink,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit,size: 18,color: Colors.grey,),
+                      onPressed: () {
+                        print("onPressed changeMode");
+                        changeMode();
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.save ,size: 18,color: Colors.grey,),
+                      onPressed: () {
+                        print("onPressed saveMode");
+                        saveMode();
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.cancel_outlined ,size: 18,color: Colors.grey,),
+                      onPressed: () {
+                        print("onPressed cancel");
+                        changeMode();
+                      },
+                    )
+                  ],
+                ),
+              ),
+              _ManageInfo(isChange : isChange, label: '이름', value: member!.name, onSaved: (val){
+                print("???? onSaved? name");
+                // tmpName = val;
+              },),
+              _ManageInfo(isChange : isChange, label: '전화 번호', value: member!.phoneNumber, onSaved: (val){
+                print("???? onSaved? phone");
+                // tmpPhoneNum = val;
+              },),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   changeMode() {
@@ -61,65 +95,69 @@ class _ManageInfoState extends State<_ManageInfo> {
       isChange = (isChange == true) ? false : true;
     });
   }
+
+  saveMode() {
+    setState(() {
+      print("saveMode setState");
+      // TODO send save and edit value and change to changeMode
+      isChange = (isChange == true) ? false : true;
+      if (formKey.currentState!.validate()) {
+        // validation 이 성공하면 true 가 리턴돼요!
+
+        // validation 이 성공하면 폼 저장하기
+        formKey.currentState!.save();
+
+        Get.snackbar(
+          '저장완료!',
+          '폼 저장이 완료되었습니다!',
+          backgroundColor: Colors.white,
+        );
+      }
+    });
+  }
 }
 
-class _TextBox extends StatelessWidget {
+class _ManageInfo extends StatelessWidget {
+  final bool isChange;
   final String label;
   final String value;
-  final ChangeMode? changeMode;
+  final FormFieldSetter onSaved;
 
-  const _TextBox({
+  const _ManageInfo({
+    required this.isChange,
     required this.label,
     required this.value,
-    required this.changeMode,
+    required this.onSaved,
     Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey)),
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 80,
-              child: Text(
-                label,
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-              ),
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
             ),
-            Expanded(child: Text(value)),
-            IconButton(
-              icon: Icon(
-                Icons.edit,
-                size: 18,
-                color: Colors.grey,
-              ),
-              onPressed: () {
-                print("#######");
-                changeMode;
-              },
-            )
-          ],
-        ),
+          ),
+          Expanded(
+            child: TextFormField(
+              readOnly: (isChange == false) ? true : false,
+              onSaved: onSaved,
+              initialValue: value,
+              decoration: (isChange == false)
+                  ? const InputDecoration(filled: false,)
+                  : const InputDecoration(
+                      filled: true,
+                      fillColor: Colors.black12,
+                    ),
+            ),
+          ),
+        ],
       ),
     );
-  }
-}
-
-class _EditBox extends StatelessWidget {
-  final String label;
-  final String value;
-  const _EditBox({
-    required this.label,
-    required this.value,
-    Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text("????");
   }
 }

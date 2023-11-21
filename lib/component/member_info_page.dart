@@ -27,10 +27,7 @@ class MemberInfoPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
       ),
-      body: PersonalInfoPage(
-        name : eachMember.name,
-        phoneNumber: eachMember.phoneNumber,
-      ),
+      body: PersonalInfoPage(),
     );
   }
 }
