@@ -20,6 +20,7 @@ class _MemberListState extends State<MemberList> {
   Future<List<Member>>? searchResultList;
 
   String searchText = '';
+  String searchOption = "name";
 
   int isNameDownSort = 0; // 1: ASC 0: NONE, -1: DESC
   int isCreateDownSort = 0;
@@ -124,7 +125,16 @@ class _MemberListState extends State<MemberList> {
 
           memberList!.forEach((element) {
             if(searchText.isNotEmpty) {
-              if(element.name.contains(searchText)){
+              var tmpElement = element.name;
+              if(searchOption == "name") {
+                tmpElement = element.name;
+              } else if(searchOption == "memberId") {
+                tmpElement = element.memberId.toString();
+              } else if(searchOption == "phoneNumber") {
+                tmpElement = element.phoneNumber;
+              }
+
+              if(tmpElement.contains(searchText)){
                 MemberResult memberResult = MemberResult(
                   eachMember: element,
                 );
@@ -163,7 +173,7 @@ class _MemberListState extends State<MemberList> {
         title: TextFormField(
           controller: searchController,
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp('[a-z A-Z ㄱ-ㅎ|가-힣|·|：]'))
+            FilteringTextInputFormatter.allow(RegExp('[0-9a-z A-Z ㄱ-ㅎ|가-힣|·|：]'))
           ],
           decoration: InputDecoration(
             hintText: '등록된 회원 검색',
@@ -190,7 +200,21 @@ class _MemberListState extends State<MemberList> {
                 searchText = value;
               });
           }
-        )
+        ),
+      actions: [
+        PopupMenuButton(
+          child: Icon(Icons.manage_search),
+          onSelected: (value) {
+            print("???????????? $value");
+            searchOption = value;
+          },
+            itemBuilder: (context) => [
+              PopupMenuItem(child: Text("이름"), value: "name",),
+              PopupMenuItem(child: Text("ID"), value: "memberId",),
+              PopupMenuItem(child: Text("전화번호"), value: "phoneNumber",),
+            ],
+        ),
+      ],
     );
   }
 }
@@ -234,7 +258,15 @@ class MemberResult extends StatelessWidget {
               },
               child: ListTile(
                 leading: CircleAvatar(child: Icon(Icons.face),backgroundColor: Colors.blue,),
-                title: Text(eachMember.name, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
+                title: Row(
+                  children: [
+                    Text(eachMember.name, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
+                    SizedBox(width: 8,),
+                    Text("["),
+                    Text(eachMember.memberId.toString(), style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
+                    Text("]"),
+                  ],
+                ),
                 subtitle: Text(eachMember.phoneNumber, style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
                 trailing: const Icon(Icons.keyboard_arrow_right),
               ),
