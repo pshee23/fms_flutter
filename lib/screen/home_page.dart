@@ -9,6 +9,7 @@ import '../locator/locator.dart';
 import '../model/Login.dart';
 import '../service/http_service.dart';
 import 'calendar_page.dart';
+import 'lesson_list.dart';
 import 'member_list.dart';
 
 
@@ -114,7 +115,7 @@ class _HomePageState extends State<HomePage> {
 
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [CalendarPage(), MemberList(), PersonalInfo(), Settings()];
+  final List<Widget> _pages = [CalendarPage(), LessonList(), MemberList(), PersonalInfo(), Settings()];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -134,15 +135,20 @@ class _HomePageState extends State<HomePage> {
         ),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        showUnselectedLabels: true,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
               icon: Icon(Icons.calendar_month),
             label: '스케쥴',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: '수업조회',
+          ),
           // TODO employee만 보이도록 해야함
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
-            label: '회원정보',
+            label: '회원조회',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
