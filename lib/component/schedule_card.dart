@@ -33,7 +33,7 @@ class ScheduleCard extends StatelessWidget {
                 scheduleInfo: scheduleInfo
             );
           },
-        ).whenComplete(() => onDaySelected!(startTime, endTime));
+        ).whenComplete(() => onDaySelected != null ? onDaySelected!(startTime, endTime) : null);
       },
       child: Container(
         decoration: BoxDecoration(

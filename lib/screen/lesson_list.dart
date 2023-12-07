@@ -1,10 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fms/component/member_info_page.dart';
-
+import '../component/schedule_card.dart';
 import '../locator/locator.dart';
-import '../model/Member.dart';
+import '../model/schedule.dart';
 import '../service/http_service.dart';
 
 class LessonList extends StatefulWidget {
@@ -17,14 +16,19 @@ class LessonList extends StatefulWidget {
 class _LessonListState extends State<LessonList> {
   final HttpService _httpService = locator<HttpService>();
   TextEditingController searchController = TextEditingController();
-  Future<List<Member>>? searchResultList;
+  Future<List<Schedule>>? searchResultList;
+
+  DateTime startDate = DateTime.now();
+  DateTime endDate = DateTime.now();
+
+  bool isFirstRequest = true;
 
   String searchText = '';
   String searchOption = "name";
 
   int isNameDownSort = 0; // 1: ASC 0: NONE, -1: DESC
   int isCreateDownSort = 0;
-  bool isMyMemberSearch = true;
+  bool isMyLessonSearch = true;
 
   emptySearchField() {
     searchController.clear();
@@ -54,19 +58,33 @@ class _LessonListState extends State<LessonList> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      isNameDownSort = (isNameDownSort == 1) ? -1 : 1;
-                      isCreateDownSort = 0;
+                      _selectDate(context);
                     });
                   },
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Text("이름순"),
-                      const SizedBox(width: 10,),
-                      Icon(isNameDownSort == -1 ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
+                      Text("검색 범위"),
+                      SizedBox(width: 10,),
                     ],
                   ),
                 ),
                 const SizedBox(width: 10,),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     setState(() {
+                //       isNameDownSort = (isNameDownSort == 1) ? -1 : 1;
+                //       isCreateDownSort = 0;
+                //     });
+                //   },
+                //   child: Row(
+                //     children: [
+                //       const Text("이름순"),
+                //       const SizedBox(width: 10,),
+                //       Icon(isNameDownSort == -1 ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
+                //     ],
+                //   ),
+                // ),
+                // const SizedBox(width: 10,),
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
@@ -87,14 +105,14 @@ class _LessonListState extends State<LessonList> {
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   onPressed: () {
                     setState(() {
-                      isMyMemberSearch = (isMyMemberSearch == true) ? false : true;
+                      isMyLessonSearch = (isMyLessonSearch == true) ? false : true;
                     });
                   },
                   child: Row(
                     children: [
-                      isMyMemberSearch==true ? const Text("회원 전체") : const Text("담당 회원"),
+                      isMyLessonSearch==true ? const Text("수업 전체") : const Text("담당 수업"),
                       const SizedBox(width: 10,),
-                      Icon(isMyMemberSearch==true ? Icons.people : Icons.person, color: Colors.white,),
+                      Icon(isMyLessonSearch==true ? Icons.people : Icons.person, color: Colors.white,),
                     ],
                   ),
                 ),
@@ -112,56 +130,76 @@ class _LessonListState extends State<LessonList> {
   }
 
   displayFoundList() {
-    searchResultList = (isMyMemberSearch == true ? _httpService.fetchMemberByEmployee() : _httpService.fetchMemberByBranch());
+    // searchResultList = (isMyLessonSearch == true ? _httpService.fetchLessonsByEmployee() : _httpService.fetchLessonsByBranch());
+    searchResultList = isFirstRequest == true ? _httpService.fetch10Schedules() : _httpService.fetchScheduleRange(startDate, endDate);
 
     return FutureBuilder(
         future: searchResultList,
         builder: (context, snapshot) {
           if(!snapshot.hasData) {
-            return const Text('No DATA');
-          }
-          List<MemberResult> searchList = [];
-          List<Member>? memberList = snapshot.data;
-
-          memberList!.forEach((element) {
-            if(searchText.isNotEmpty) {
-              var tmpElement = element.name;
-              if(searchOption == "name") {
-                tmpElement = element.name;
-              } else if(searchOption == "memberId") {
-                tmpElement = element.memberId.toString();
-              } else if(searchOption == "phoneNumber") {
-                tmpElement = element.phoneNumber;
-              }
-
-              if(tmpElement.contains(searchText)){
-                MemberResult memberResult = MemberResult(
-                  eachMember: element,
-                );
-                searchList.add(memberResult);
-              }
-            } else {
-              MemberResult memberResult = MemberResult(
-                eachMember: element,
-              );
-              searchList.add(memberResult);
-            }
-          });
-
-          if(isNameDownSort == -1) {
-            searchList.sort((b, a) => a.eachMember.name.compareTo(b.eachMember.name));
-          } else if(isNameDownSort == 1) {
-            searchList.sort((a, b) => a.eachMember.name.compareTo(b.eachMember.name));
+            return const Center(child: Text('결과 없음', style: TextStyle(color: Colors.grey),), );
           }
 
-          if(isCreateDownSort == -1) {
-            searchList.sort((b, a) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
-          } else if(isCreateDownSort == 1){
-            searchList.sort((a, b) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
-          }
+          List<Schedule>? lessonList = snapshot.data;
+          print("??????????? $lessonList");
+          // lessonList!.forEach((element) {
+          //   if(searchText.isNotEmpty) {
+          //     var tmpElement = element.name;
+          //     if(searchOption == "name") {
+          //       tmpElement = element.name;
+          //     } else if(searchOption == "memberId") {
+          //       tmpElement = element.memberId.toString();
+          //     } else if(searchOption == "phoneNumber") {
+          //       tmpElement = element.phoneNumber;
+          //     }
+          //
+          //     if(tmpElement.contains(searchText)){
+          //       MemberResult memberResult = MemberResult(
+          //         eachMember: element,
+          //       );
+          //       searchList.add(memberResult);
+          //     }
+          //   } else {
+          //     MemberResult memberResult = MemberResult(
+          //       eachMember: element,
+          //     );
+          //     searchList.add(memberResult);
+          //   }
+          // });
+          //
+          // if(isNameDownSort == -1) {
+          //   searchList.sort((b, a) => a.eachMember.name.compareTo(b.eachMember.name));
+          // } else if(isNameDownSort == 1) {
+          //   searchList.sort((a, b) => a.eachMember.name.compareTo(b.eachMember.name));
+          // }
+          //
+          // if(isCreateDownSort == -1) {
+          //   searchList.sort((b, a) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
+          // } else if(isCreateDownSort == 1){
+          //   searchList.sort((a, b) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
+          // }
 
-          return ListView(
-            children: searchList,
+          // return ListView(
+          //   children: searchList,
+          // );
+          return Container(
+            // height: 253, // TODO overflow
+            child: ListView.separated(
+                itemCount: lessonList!.length,
+                separatorBuilder: (context, index) {
+                  return SizedBox(height: 8.0,);
+                }, // item 사이에 이루어지는 Builder
+                shrinkWrap: true,
+                itemBuilder: (context, index){
+                  final scheduleInfo = lessonList[index];
+                  return ScheduleCard(
+                    startTime: scheduleInfo.startDateTime,
+                    endTime: scheduleInfo.endDateTime,
+                    scheduleInfo: scheduleInfo,
+                    color: Colors.red,
+                    onDaySelected: null,
+                  );
+                }),
           );
         }
     );
@@ -176,7 +214,7 @@ class _LessonListState extends State<LessonList> {
             FilteringTextInputFormatter.allow(RegExp('[0-9a-z A-Z ㄱ-ㅎ|가-힣|·|：]'))
           ],
           decoration: InputDecoration(
-            hintText: '등록된 회원 검색',
+            hintText: '수업 검색',
             hintStyle: TextStyle(
               color: Colors.lightBlueAccent,
             ),
@@ -217,63 +255,18 @@ class _LessonListState extends State<LessonList> {
       ],
     );
   }
-}
 
-class MemberResult extends StatelessWidget {
-  final Member eachMember;
+  Future<void> _selectDate(BuildContext context) async {
+    final pickedDate = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(2015),
+        lastDate: DateTime(2050));
 
-  const MemberResult({
-    required this.eachMember,
-    Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(3),
-      child: Container(
-        color: Colors.white54,
-        child: Column(
-          children: <Widget>[
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                        var begin = const Offset(1.0, 0);
-                        var end = Offset.zero;
-                        var curve = Curves.ease;
-                        var tween = Tween(
-                          begin: begin,
-                          end: end,
-                        ).chain(
-                          CurveTween(curve: curve),
-                        );
-                        return SlideTransition(position: animation.drive(tween),child: child,);
-                      },
-                    pageBuilder: (context, animation, secondaryAnimation) => MemberInfoPage(eachMember: eachMember,),
-                    fullscreenDialog: false,
-                  ),
-                );
-              },
-              child: ListTile(
-                leading: CircleAvatar(child: Icon(Icons.face),backgroundColor: Colors.blue,),
-                title: Row(
-                  children: [
-                    Text(eachMember.name, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
-                    SizedBox(width: 8,),
-                    Text("["),
-                    Text(eachMember.memberId.toString(), style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
-                    Text("]"),
-                  ],
-                ),
-                subtitle: Text(eachMember.phoneNumber, style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
-                trailing: const Icon(Icons.keyboard_arrow_right),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
+    if (pickedDate != null) {
+      setState(() {
+        startDate = pickedDate.start;
+        endDate = pickedDate.end;
+      });
+    }
   }
 }

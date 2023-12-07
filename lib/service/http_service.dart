@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fms/model/category_colors.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../model/Lesson.dart';
 import '../model/Member.dart';
@@ -19,6 +20,10 @@ abstract class HttpService {
   Future<List<Schedule>> fetchSchedules(datetime);
 
   Future<Map<DateTime, List<String>>> fetchMonthlySchedule(datetime);
+
+  Future<List<Schedule>> fetchScheduleRange(startDatetime, endDateTime);
+
+  Future<List<Schedule>> fetch10Schedules();
 
   void updateScheduleStatus(lessonHistoryId, status);
 
@@ -110,6 +115,64 @@ class HttpServiceImplementation implements HttpService {
     print('get monthly list body. result=$resultMap');
 
     return resultMap;
+  }
+
+  @override
+  Future<List<Schedule>> fetch10Schedules() async {
+final id = await storage.read(key: 'id');
+    final isEmployee = await storage.read(key: 'isEmployee');
+    print('fetch 10 Schedule. id=$id, isEmployee=$isEmployee');
+
+    var url = '/lesson-history/employee/$id/top';
+    final uri = Uri.http(serverUrl, url);
+    print('fetch schedules get. url=$uri');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'toyProject1234'
+      },
+    );
+
+    final List<Schedule> result = jsonDecode(response.body)
+        .map<Schedule>((json) => Schedule.fromJson(json)).toList();
+    print('get 10 list body. result=$result');
+
+    return result;
+  }
+
+  @override
+  Future<List<Schedule>> fetchScheduleRange(startDatetime, endDateTime) async {
+    print('fetchScheduleRange. startDatetime=$startDatetime, endDateTime=$endDateTime');
+
+    final id = await storage.read(key: 'id');
+    final isEmployee = await storage.read(key: 'isEmployee');
+    print('fetchScheduleRange. startDate=$startDatetime, endDate=$endDateTime, id=$id, isEmployee=$isEmployee');
+
+    String formatStart = DateFormat('yyyy-MM-dd').format(startDatetime).toString();
+    String formatEnd = DateFormat('yyyy-MM-dd').format(endDateTime).toString();
+
+    final queryParameters = {
+      'startDate': formatStart,
+      'endDate': formatEnd,
+    };
+
+    var url = '/lesson-history/employee/$id';
+    final uri = Uri.http(serverUrl, url).replace(queryParameters: queryParameters);
+    print('fetch schedules get. url=$uri');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'toyProject1234'
+      },
+    );
+
+    final List<Schedule> result = jsonDecode(response.body)
+        .map<Schedule>((json) => Schedule.fromJson(json)).toList();
+    print('get monthly list body. result=$result');
+
+    return result;
   }
 
   @override
