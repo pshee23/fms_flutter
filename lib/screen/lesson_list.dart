@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import '../component/schedule_card.dart';
 import '../locator/locator.dart';
 import '../model/schedule.dart';
@@ -17,9 +18,13 @@ class _LessonListState extends State<LessonList> {
   final HttpService _httpService = locator<HttpService>();
   TextEditingController searchController = TextEditingController();
   Future<List<Schedule>>? searchResultList;
+  List<ElevatedButton> keywordList = [];
 
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now();
+
+  double screenHeight = 0;
+  double screenWidth = 0;
 
   bool isFirstRequest = true;
 
@@ -27,7 +32,7 @@ class _LessonListState extends State<LessonList> {
   String searchOption = "name";
 
   int isNameDownSort = 0; // 1: ASC 0: NONE, -1: DESC
-  int isCreateDownSort = 0;
+  int isDateDownSort = 0;
   bool isMyLessonSearch = true;
 
   emptySearchField() {
@@ -39,32 +44,35 @@ class _LessonListState extends State<LessonList> {
 
   @override
   Widget build(BuildContext context) {
+    screenHeight = MediaQuery.of(context).size.height;
+    screenWidth = MediaQuery.of(context).size.width;
+
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            "수업 검색",
-            style: TextStyle(
-                fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-          child: Row(
+        ExpansionTile(
+          title: Text("정렬 & 필터"),
+          children: [
+            Row(
               children: [
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _selectDate(context);
+                      if(isDateDownSort == 1) {
+                        isDateDownSort = -1;
+                        keywordList.add(keywordCard("날짜-내림차순"));
+                        removeFromList("날짜-오름차순");
+                      } else {
+                        isDateDownSort = 1;
+                        keywordList.add(keywordCard("날짜-오름차순"));
+                        removeFromList("날짜-내림차순");
+                      }
                     });
                   },
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Text("검색 범위"),
-                      SizedBox(width: 10,),
+                      const Text("시간순"),
+                      const SizedBox(width: 10,),
+                      Icon(isDateDownSort == -1 ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
                     ],
                   ),
                 ),
@@ -85,48 +93,117 @@ class _LessonListState extends State<LessonList> {
                 //   ),
                 // ),
                 // const SizedBox(width: 10,),
+              ],
+            ),
+          ],
+        ),
+        ExpansionTile(
+          title: Text("날짜 범위 설정"),
+          children: [
+            Row(
+              children: [
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      isCreateDownSort = (isCreateDownSort == 1) ? -1 : 1;
-                      isNameDownSort = 0;
+                      _selectDate(context);
                     });
                   },
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Text("생성순"),
-                      const SizedBox(width: 10,),
-                      Icon(isCreateDownSort == -1 ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: Colors.white,),
+                      Text("검색 범위"),
+                      SizedBox(width: 10,),
                     ],
                   ),
                 ),
                 const SizedBox(width: 10,),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   onPressed: () {
                     setState(() {
-                      isMyLessonSearch = (isMyLessonSearch == true) ? false : true;
+                      isFirstRequest = true;
+                      removeFromList(DateFormat('yyyy-MM-dd').format(startDate).toString());
+                      removeFromList(DateFormat('yyyy-MM-dd').format(endDate).toString());
                     });
                   },
-                  child: Row(
+                  child: const Row(
                     children: [
-                      isMyLessonSearch==true ? const Text("수업 전체") : const Text("담당 수업"),
-                      const SizedBox(width: 10,),
-                      Icon(isMyLessonSearch==true ? Icons.people : Icons.person, color: Colors.white,),
+                      Text("날짜 초기화"),
+                      SizedBox(width: 10,),
                     ],
                   ),
                 ),
-              ]
-          ),
+              ],
+            )
+          ],
         ),
-        Expanded(
-          child: Scaffold(
-            appBar: searchHeader(setState),
-            body: displayFoundList(),
-          ),
+        ExpansionTile(
+          title: Text("상세 검색"),
+          children: <Widget> [
+            Divider(height: 3, color: Colors.grey,),
+            Row(
+              children: [
+                SizedBox(width: screenWidth*0.2, child: Text("수업명", textAlign: TextAlign.center,)),
+                SizedBox(
+                  width: screenWidth*0.8,
+                  child: TextFormField(
+                      controller: searchController,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp('[0-9a-z A-Z ㄱ-ㅎ|가-힣|·|：]'))
+                      ],
+                      decoration: InputDecoration(
+                        hintText: '수업명 검색',
+                        hintStyle: TextStyle(
+                          color: Colors.lightBlueAccent,
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.lightBlueAccent)
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                        filled: true,
+                        suffixIcon: IconButton(icon: Icon(Icons.clear, color: Colors.lightBlueAccent,),
+                          onPressed: emptySearchField,
+                        ),
+                      ),
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          searchText = value;
+                          searchOption = "className";
+                        });
+                      }
+                  ),
+                )
+              ],
+            ),
+            // Container(
+            //   height: screenHeight*0.05,
+            //   width: screenWidth,
+            //   child: Text("text")
+            // ),
+            // Scaffold(
+            //   appBar: searchHeader(setState),
+            //   // body: displayFoundList(),
+            // ),
+          ]
         ),
+        Wrap(
+          direction: Axis.horizontal, // 나열 방향
+          alignment: WrapAlignment.start, // 정렬 방식
+          spacing: 2, // 상하 간격,
+          children: keywordList,
+        ),
+        displayFoundList()
       ],
     );
+  }
+
+  removeFromList(value) {
+    ElevatedButton tmp = keywordCard(value);
+    keywordList.removeWhere((element) => element.key == tmp.key);
   }
 
   displayFoundList() {
@@ -141,31 +218,24 @@ class _LessonListState extends State<LessonList> {
           }
 
           List<Schedule>? lessonList = snapshot.data;
-          print("??????????? $lessonList");
-          // lessonList!.forEach((element) {
-          //   if(searchText.isNotEmpty) {
-          //     var tmpElement = element.name;
-          //     if(searchOption == "name") {
-          //       tmpElement = element.name;
-          //     } else if(searchOption == "memberId") {
-          //       tmpElement = element.memberId.toString();
-          //     } else if(searchOption == "phoneNumber") {
-          //       tmpElement = element.phoneNumber;
-          //     }
-          //
-          //     if(tmpElement.contains(searchText)){
-          //       MemberResult memberResult = MemberResult(
-          //         eachMember: element,
-          //       );
-          //       searchList.add(memberResult);
-          //     }
-          //   } else {
-          //     MemberResult memberResult = MemberResult(
-          //       eachMember: element,
-          //     );
-          //     searchList.add(memberResult);
-          //   }
-          // });
+          List<Schedule>? searchList = [];
+
+          lessonList!.forEach((element) {
+            if(searchText.isNotEmpty) {
+              var tmpElement = element.lessonName;
+              if(searchOption == "lessonName") {
+                tmpElement = element.lessonName;
+              } else if(searchOption == "memberId") {
+                tmpElement = element.memberId.toString();
+              }
+
+              if(tmpElement.contains(searchText)){
+                searchList.add(element);
+              }
+            } else {
+              searchList.add(element);
+            }
+          });
           //
           // if(isNameDownSort == -1) {
           //   searchList.sort((b, a) => a.eachMember.name.compareTo(b.eachMember.name));
@@ -173,11 +243,11 @@ class _LessonListState extends State<LessonList> {
           //   searchList.sort((a, b) => a.eachMember.name.compareTo(b.eachMember.name));
           // }
           //
-          // if(isCreateDownSort == -1) {
-          //   searchList.sort((b, a) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
-          // } else if(isCreateDownSort == 1){
-          //   searchList.sort((a, b) => a.eachMember.memberId.compareTo(b.eachMember.memberId));
-          // }
+          if(isDateDownSort == -1) {
+            searchList.sort((b, a) => a.startDateTime.compareTo(b.startDateTime));
+          } else if(isDateDownSort == 1){
+            searchList.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+          }
 
           // return ListView(
           //   children: searchList,
@@ -185,13 +255,13 @@ class _LessonListState extends State<LessonList> {
           return Container(
             // height: 253, // TODO overflow
             child: ListView.separated(
-                itemCount: lessonList!.length,
+                itemCount: searchList.length,
                 separatorBuilder: (context, index) {
                   return SizedBox(height: 8.0,);
                 }, // item 사이에 이루어지는 Builder
                 shrinkWrap: true,
                 itemBuilder: (context, index){
-                  final scheduleInfo = lessonList[index];
+                  final scheduleInfo = searchList[index];
                   return ScheduleCard(
                     startTime: scheduleInfo.startDateTime,
                     endTime: scheduleInfo.endDateTime,
@@ -205,55 +275,8 @@ class _LessonListState extends State<LessonList> {
     );
   }
 
-  AppBar searchHeader(StateSetter setState) {
-    return AppBar(
-        automaticallyImplyLeading: false,
-        title: TextFormField(
-          controller: searchController,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp('[0-9a-z A-Z ㄱ-ㅎ|가-힣|·|：]'))
-          ],
-          decoration: InputDecoration(
-            hintText: '수업 검색',
-            hintStyle: TextStyle(
-              color: Colors.lightBlueAccent,
-            ),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightBlueAccent)
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.blue),
-            ),
-            filled: true,
-            suffixIcon: IconButton(icon: Icon(Icons.clear, color: Colors.white,),
-              onPressed: emptySearchField,
-            ),
-          ),
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-          onChanged: (value) {
-            setState(() {
-                searchText = value;
-              });
-          }
-        ),
-      actions: [
-        PopupMenuButton(
-          child: Icon(Icons.manage_search),
-          onSelected: (value) {
-            print("???????????? $value");
-            searchOption = value;
-          },
-            itemBuilder: (context) => [
-              PopupMenuItem(child: Text("이름"), value: "name",),
-              PopupMenuItem(child: Text("ID"), value: "memberId",),
-              PopupMenuItem(child: Text("전화번호"), value: "phoneNumber",),
-            ],
-        ),
-      ],
-    );
+  ElevatedButton keywordCard(String value) {
+    return ElevatedButton(key: Key(value), onPressed: (){}, child: Text(value));
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -266,6 +289,9 @@ class _LessonListState extends State<LessonList> {
       setState(() {
         startDate = pickedDate.start;
         endDate = pickedDate.end;
+        isFirstRequest = false;
+        keywordList.add(keywordCard(DateFormat('yyyy-MM-dd').format(startDate).toString()));
+        keywordList.add(keywordCard(DateFormat('yyyy-MM-dd').format(endDate).toString()));
       });
     }
   }
