@@ -190,11 +190,13 @@ class _LessonListState extends State<LessonList> {
             // ),
           ]
         ),
-        Wrap(
-          direction: Axis.horizontal, // 나열 방향
-          alignment: WrapAlignment.start, // 정렬 방식
-          spacing: 2, // 상하 간격,
-          children: keywordList,
+        SizedBox(
+          child: Wrap(
+            direction: Axis.horizontal, // 나열 방향
+            alignment: WrapAlignment.start, // 정렬 방식
+            spacing: 2, // 상하 간격,
+            children: keywordList,
+          ),
         ),
         displayFoundList()
       ],
@@ -208,7 +210,7 @@ class _LessonListState extends State<LessonList> {
 
   displayFoundList() {
     // searchResultList = (isMyLessonSearch == true ? _httpService.fetchLessonsByEmployee() : _httpService.fetchLessonsByBranch());
-    searchResultList = isFirstRequest == true ? _httpService.fetch10Schedules() : _httpService.fetchScheduleRange(startDate, endDate);
+    searchResultList = (isFirstRequest == true) ? _httpService.fetchScheduleRange(null, null, isDateDownSort, 0) : _httpService.fetchScheduleRange(startDate, endDate, isDateDownSort, 0);
 
     return FutureBuilder(
         future: searchResultList,

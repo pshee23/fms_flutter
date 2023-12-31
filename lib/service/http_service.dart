@@ -21,7 +21,7 @@ abstract class HttpService {
 
   Future<Map<DateTime, List<String>>> fetchMonthlySchedule(datetime);
 
-  Future<List<Schedule>> fetchScheduleRange(startDatetime, endDateTime);
+  Future<List<Schedule>> fetchScheduleRange(startDatetime, endDateTime, orderByTime, offset);
 
   Future<List<Schedule>> fetch10Schedules();
 
@@ -142,32 +142,43 @@ final id = await storage.read(key: 'id');
   }
 
   @override
-  Future<List<Schedule>> fetchScheduleRange(startDatetime, endDateTime) async {
+  Future<List<Schedule>> fetchScheduleRange(startDatetime, endDateTime, orderByTime, offset) async {
     print('fetchScheduleRange. startDatetime=$startDatetime, endDateTime=$endDateTime');
 
     final id = await storage.read(key: 'id');
     final isEmployee = await storage.read(key: 'isEmployee');
     print('fetchScheduleRange. startDate=$startDatetime, endDate=$endDateTime, id=$id, isEmployee=$isEmployee');
 
-    String formatStart = DateFormat('yyyy-MM-dd').format(startDatetime).toString();
-    String formatEnd = DateFormat('yyyy-MM-dd').format(endDateTime).toString();
+    String? formatStart;
+    String? formatEnd;
+    if(startDatetime != null) {
+      formatStart = DateFormat('yyyy-MM-dd').format(startDatetime).toString();
+      formatEnd = DateFormat('yyyy-MM-dd').format(endDateTime).toString();
+    }
 
-    final queryParameters = {
+    final body = {
+      'employeeId' : 1,
+      'orderByTime' : orderByTime,
+      'offset' : offset,
+      'limit' : 5,
       'startDate': formatStart,
       'endDate': formatEnd,
     };
 
     var url = '/lesson-history/employee/$id';
-    final uri = Uri.http(serverUrl, url).replace(queryParameters: queryParameters);
+    final uri = Uri.http(serverUrl, url);
     print('fetch schedules get. url=$uri');
-    final response = await http.get(
+
+    final jsonString = json.encode(body);
+    final response = await http.post(
       uri,
+      body: jsonString,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'toyProject1234'
-      },
+      }
     );
-
+    print('get monthly list body. result=${response.body}');
     final List<Schedule> result = jsonDecode(response.body)
         .map<Schedule>((json) => Schedule.fromJson(json)).toList();
     print('get monthly list body. result=$result');

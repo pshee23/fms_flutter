@@ -49,25 +49,22 @@ class CalendarInfoList extends StatelessWidget {
                   scheduleCount: scheduleList.length
               ),
               const SizedBox(height: 8.0,),
-              Container(
-                height: 253, // TODO overflow
-                child: ListView.separated(
-                    itemCount: scheduleList.length,
-                    separatorBuilder: (context, index) {
-                      return SizedBox(height: 8.0,);
-                    }, // item 사이에 이루어지는 Builder
-                    shrinkWrap: true,
-                    itemBuilder: (context, index){
-                      final scheduleInfo = scheduleList[index];
-                      return ScheduleCard(
-                        startTime: scheduleInfo.startDateTime,
-                        endTime: scheduleInfo.endDateTime,
-                        scheduleInfo: scheduleInfo,
-                        color: Colors.red,
-                        onDaySelected: onDaySelected,
-                      );
-                    }),
-              ),
+              ListView.separated(
+                  itemCount: scheduleList.length,
+                  separatorBuilder: (context, index) {
+                    return const SizedBox(height: 8.0,);
+                  }, // item 사이에 이루어지는 Builder
+                  shrinkWrap: true,
+                  itemBuilder: (context, index){
+                    final scheduleInfo = scheduleList[index];
+                    return ScheduleCard(
+                      startTime: scheduleInfo.startDateTime,
+                      endTime: scheduleInfo.endDateTime,
+                      scheduleInfo: scheduleInfo,
+                      color: Colors.red,
+                      onDaySelected: onDaySelected,
+                    );
+                  }),
             ],
           );
         }
