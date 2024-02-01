@@ -77,7 +77,7 @@ class HttpServiceImplementation implements HttpService {
     var code = response.statusCode;
     print('get Lesson-History list. code=$code, body=${response.body}');
 
-    final List<Schedule> result = jsonDecode(response.body)
+    final List<Schedule> result = jsonDecode(utf8.decode(response.bodyBytes))
         .map<Schedule>((json) => Schedule.fromJson(json)).toList();
     print('get list body. result=$result');
     return result;
@@ -107,7 +107,7 @@ class HttpServiceImplementation implements HttpService {
     var code = response.statusCode;
     print('get Lesson-History list. code=$code, body=${response.body}');
 
-    final Map<String, dynamic> result = jsonDecode(response.body);
+    final Map<String, dynamic> result = jsonDecode(utf8.decode(response.bodyBytes));
     Map<DateTime, List<String>> resultMap = new HashMap<DateTime, List<String>>();
     result.forEach((key, value) {
       resultMap[DateTime.parse(key).toUtc()] = List<String>.from(value);
@@ -134,7 +134,7 @@ final id = await storage.read(key: 'id');
       },
     );
 
-    final List<Schedule> result = jsonDecode(response.body)
+    final List<Schedule> result = jsonDecode(utf8.decode(response.bodyBytes))
         .map<Schedule>((json) => Schedule.fromJson(json)).toList();
     print('get 10 list body. result=$result');
 
@@ -179,7 +179,7 @@ final id = await storage.read(key: 'id');
       }
     );
     print('get monthly list body. result=${response.body}');
-    final List<Schedule> result = jsonDecode(response.body)
+    final List<Schedule> result = jsonDecode(utf8.decode(response.bodyBytes))
         .map<Schedule>((json) => Schedule.fromJson(json)).toList();
     print('get monthly list body. result=$result');
 
@@ -190,7 +190,7 @@ final id = await storage.read(key: 'id');
   Future<List<CategoryColors>> fetchCategoryColors() async {
     final uri = Uri.http(serverUrl, '/colors');
     final response = await http.get(uri);
-    final List<CategoryColors> result = jsonDecode(response.body)
+    final List<CategoryColors> result = jsonDecode(utf8.decode(response.bodyBytes))
         .map<CategoryColors>((json) => CategoryColors.fromJson(json)).toList();
     return result;
   }
@@ -248,7 +248,7 @@ final id = await storage.read(key: 'id');
 
     print('fetchLessons response.body=${response.body}');
     List<Lesson> resultList = [];
-    final List<dynamic> resultDynamic = jsonDecode(response.body);
+    final List<dynamic> resultDynamic = jsonDecode(utf8.decode(response.bodyBytes));
     resultDynamic.forEach((element) {
       print('element=$element');
       resultList.add(Lesson.fromJson(element));
@@ -268,7 +268,7 @@ final id = await storage.read(key: 'id');
     final response = await http.get(uri);
 
     List<Member> resultList = [];
-    final List<dynamic> resultDynamic = jsonDecode(response.body);
+    final List<dynamic> resultDynamic = jsonDecode(utf8.decode(response.bodyBytes));
     resultDynamic.forEach((element) {
       print('element=$element');
       resultList.add(Member.fromJson(element));
@@ -288,7 +288,7 @@ final id = await storage.read(key: 'id');
     final response = await http.get(uri);
 
     List<Member> resultList = [];
-    final List<dynamic> resultDynamic = jsonDecode(response.body);
+    final List<dynamic> resultDynamic = jsonDecode(utf8.decode(response.bodyBytes));
     resultDynamic.forEach((element) {
       print('element=$element');
       resultList.add(Member.fromJson(element));
@@ -311,7 +311,7 @@ final id = await storage.read(key: 'id');
     print('fetchPersonalInfo request. uri=$uri');
     final response = await http.get(uri);
 
-    final dynamic resultDynamic = jsonDecode(response.body);
+    final dynamic resultDynamic = jsonDecode(utf8.decode(response.bodyBytes));
     return Member.fromJson(resultDynamic);
   }
 }
