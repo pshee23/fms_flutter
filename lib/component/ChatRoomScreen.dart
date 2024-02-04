@@ -2,15 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
 
+import '../model/chat_message.dart';
+import '../model/chat_room.dart';
+import 'chat_bubbles.dart';
+
 class ChatRoomScreen extends StatefulWidget {
-  final String roomId;
+  final ChatRoom chatRoom;
 
   const ChatRoomScreen({
-    required this.roomId,
+    required this.chatRoom,
     Key? key}) : super(key: key);
 
   @override
@@ -18,30 +23,48 @@ class ChatRoomScreen extends StatefulWidget {
 }
 
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
-  // final List<MyChat> chats = []; // 내가 입력한 채팅 // 상대방 채팅을 저장할 리스트도 필요하긴 함
-  final List<Text> chats = [];
+  final List<ChatBubbles> chats = [];
   final TextEditingController _textEditingController = TextEditingController();
+
+  static final storage = FlutterSecureStorage();
 
   StompClient? stompClient;
   final socketUrl = 'baseurl/chatting';
   String serverUrl = dotenv.get('SERVER_URL');
+  String roomId = "";
+  String myId = "";
 
   void onConnect(StompFrame frame) {
     print("################# onConnect");
     stompClient!.subscribe(
-        destination: '/sub/chat/room/65bb60be080ebd450933e4f5',
+        destination: '/sub/chat/room/' + roomId,
         callback: (StompFrame frame) {
           print("################# callback");
           if (frame.body != null) {
-            // Map<String, dynamic> obj = json.decode(frame.body!);
-            print("#################");
-            // Msg message = Msg(content : obj['content'], uuid : obj['uuid']);
-            // setState(() => {
-            //   list.add(message)
-            // });
+            print("################# body=" + frame.body.toString());
+            // final ChatMessage result = json.decode(frame.body!)
+            //     .map<ChatMessage>((json) => ChatMessage.fromJson(json));
+            final dynamic resultDynamic = json.decode(frame.body!);
+            ChatMessage result = ChatMessage.fromJson(resultDynamic);
+            print("################# result=" + result.toString());
+            bool isMe = false;
+            if(myId == result.sender) {
+              print("same @@ " + myId);
+              isMe = true;
+            } else {
+              print("not same @@ " + myId + " / result.sender =" + result.sender);
+              isMe = false;
+            }
+            setState(() {
+              chats.add(ChatBubbles(chatMessage: result, isMe: isMe,));
+            });
           }
         });
     sendJoin();
+  }
+
+  checkMyState() async {
+    myId = (await storage.read(key: 'id'))!;
   }
 
   sendJoin() {
@@ -50,8 +73,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         destination: '/pub/chat/message',
         body: json.encode({
           "type" : "JOIN",
-          "roomId": "65bb64c0768bbe33afff7cc2",
-          "sender" : "aaa",
+          "roomId": roomId,
+          "sender" : myId,
           "content" : null
         }));
   }
@@ -63,8 +86,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           destination: '/pub/chat/message',
           body: json.encode({
             "type" : "CHAT",
-            "roomId": "65bb64c0768bbe33afff7cc2",
-            "sender" : "aaa",
+            "roomId": roomId,
+            "sender" : myId,
             "content" : text
           }));
     });
@@ -72,8 +95,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   @override
   void initState() {
+    roomId = widget.chatRoom.roomId;
+    checkMyState();
     var url = "http://$serverUrl/ws";
-    print("############ url=" + url);
+    print("############ roomId=" +roomId+"/ url=" + url);
     super.initState();
     if (stompClient == null) {
       stompClient = StompClient(
@@ -96,7 +121,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
-              title: Text("홍길동", style: Theme.of(context).textTheme.titleLarge,),
+              title: Text("Chat with " + widget.chatRoom.name, style: Theme.of(context).textTheme.titleLarge,),
               actions: [
                 Icon(Icons.search, size: 20,),
                 SizedBox(width: 25,),
@@ -106,24 +131,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ),
             body: Column(
                 children: [
+                  // chat list 칸
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
                           _TimeLine(time: "2023년 1월 1일 금요일"),
-                          // OtherChat(
-                          //   name: "홍길동",
-                          //   text: "새해 복 많이 받으세요",
-                          //   time: "오전 10:10",),
-                          // MyChat(
-                          //   time: "오후 2:15",
-                          //   text: "선생님도 많이 받으십시오.",
-                          // ),
                           ...List.generate(chats.length, (index) => chats[index]),
                         ],
                       )
                     ),
                   ),
+                  // chat 입력 칸
                   Container(
                     height: 60,
                     color: Colors.white,
@@ -154,13 +173,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void _handleSubmitted(text) {
     _textEditingController.clear(); // 전송하면 텍스트필드를 비워줌
     setState(() {
-      chats.add(  // 다시 그리기 위해 리스트에 추가
-        // MyChat(text: text, time: DateFormat("a k:m").format(new DateTime.now())
-        //     .replaceAll("AM", "오전")
-        //     .replaceAll("PM", "오후"),
-        // ),
-          Text(text),
-      );
+      // chats.add(  // 다시 그리기 위해 리스트에 추가
+      //   // MyChat(text: text, time: DateFormat("a k:m").format(new DateTime.now())
+      //   //     .replaceAll("AM", "오전")
+      //   //     .replaceAll("PM", "오후"),
+      //   // ),
+      //     ChatBubbles(chatMessage: text)
+      // );
       sendMessage(text);
     });
   }

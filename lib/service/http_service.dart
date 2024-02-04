@@ -119,7 +119,7 @@ class HttpServiceImplementation implements HttpService {
 
   @override
   Future<List<Schedule>> fetch10Schedules() async {
-final id = await storage.read(key: 'id');
+    final id = await storage.read(key: 'id');
     final isEmployee = await storage.read(key: 'isEmployee');
     print('fetch 10 Schedule. id=$id, isEmployee=$isEmployee');
 
@@ -304,7 +304,7 @@ final id = await storage.read(key: 'id');
     final id = await storage.read(key: 'id');
     final isEmployee = await storage.read(key: 'isEmployee');
 
-    String path = (isEmployee != null && isEmployee!.contains("true")) ? 'employee' : 'member';
+    String path = (isEmployee != null && isEmployee.contains("true")) ? 'employee' : 'member';
 
     final uri = Uri.http(serverUrl, '/$path/$id');
 

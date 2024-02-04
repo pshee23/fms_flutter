@@ -169,7 +169,7 @@ class RoomResult extends StatelessWidget {
                       );
                       return SlideTransition(position: animation.drive(tween),child: child,);
                     },
-                    pageBuilder: (context, animation, secondaryAnimation) => ChatRoomScreen(roomId: eachRoom.roomId,),
+                    pageBuilder: (context, animation, secondaryAnimation) => ChatRoomScreen(chatRoom: eachRoom,),
                     fullscreenDialog: false,
                   ),
                 );
