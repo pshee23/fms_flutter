@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fms/screen/personal_info.dart';
 import 'package:fms/screen/settings.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../component/FlutterLocalNotification.dart';
 import '../locator/locator.dart';
 import '../model/Login.dart';
 import '../service/http_service.dart';
@@ -28,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   // dynamic userInfo = '';
   late Login login;
   final HttpService _httpService = locator<HttpService>();
+  var messageString = "";
 
   logout() async {
     // userInfo = await storage.read(key: 'login');
@@ -48,11 +50,39 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void getMyDeviceToken() async {
+    final token = await FirebaseMessaging.instance.getToken();
+    print("내 디바이스 토큰 : $token");
+    // TODO device token 서버에서 관리 필요. 서버로 전송, 저장
+  }
+
   @override
   void initState() {
+    getMyDeviceToken();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      RemoteNotification? notification = message.notification;
+
+      if(notification != null) {
+        FlutterLocalNotificationsPlugin().show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'high_importance_channel', 'high_importance_notification', importance: Importance.max
+              ),
+            ),
+        );
+
+        setState(() {
+          messageString = message.notification!.body!;
+          print("Foreground 메시지 수신 : $messageString");
+        });
+      }
+    });
     super.initState();
-    FlutterLocalNotification.requestNotificationPermission();
-    FlutterLocalNotification.init();
+    // FlutterLocalNotification.requestNotificationPermission();
+    // FlutterLocalNotification.init();
 
     baseUrl = dotenv.get('SERVER_URL');
 

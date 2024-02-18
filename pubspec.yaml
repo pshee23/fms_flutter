@@ -45,6 +45,9 @@ dependencies:
   intl: ^0.18.0
   stomp_dart_client: ^1.0.2
   flutter_local_notifications: ^16.3.2
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.5.0
+  firebase_analytics: ^10.8.0
 
 dev_dependencies:
   flutter_test:
