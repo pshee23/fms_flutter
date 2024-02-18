@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:fms/component/FlutterLocalNotification.dart';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
@@ -57,6 +58,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             }
             setState(() {
               chats.add(ChatBubbles(chatMessage: result, isMe: isMe,));
+
+              FlutterLocalNotification.showNotification(result.sender, result.content);
             });
           }
         });

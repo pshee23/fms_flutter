@@ -5,6 +5,7 @@ import 'package:fms/screen/personal_info.dart';
 import 'package:fms/screen/settings.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../component/FlutterLocalNotification.dart';
 import '../locator/locator.dart';
 import '../model/Login.dart';
 import '../service/http_service.dart';
@@ -50,6 +51,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    FlutterLocalNotification.requestNotificationPermission();
+    FlutterLocalNotification.init();
+
     baseUrl = dotenv.get('SERVER_URL');
 
     // 비동기로 flutter secure storage 정보를 불러오는 작업
