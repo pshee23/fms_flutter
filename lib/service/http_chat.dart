@@ -6,7 +6,9 @@ import 'package:http/http.dart' as http;
 
 abstract class HttpChat {
 
-  Future<List<ChatRoom>> fetchAllChatRooms();
+  Future<List<ChatRoom>> fetchChatRoomsById();
+
+  Future<ChatRoom> createChatRoom(memberName, memberId);
 }
 
 class HttpChatImplementation implements HttpChat {
@@ -15,9 +17,14 @@ class HttpChatImplementation implements HttpChat {
   String serverUrl = dotenv.get('SERVER_URL');
 
   @override
-  Future<List<ChatRoom>> fetchAllChatRooms() async {
-    var url = '/chat/room/list';
-    print('fetch All ChatRooms. url=$url');
+  Future<List<ChatRoom>> fetchChatRoomsById() async {
+    final id = await storage.read(key: 'id');
+    final isEmployee = await storage.read(key: 'isEmployee');
+    String userType = (isEmployee != null && isEmployee.contains("true")) ? 'employee' : 'member';
+
+    var url = '/chat/room/list/$userType/$id';
+    print('fetch Chat Rooms By Id. url=$url');
+
     final uri = Uri.http(serverUrl, url);
     final response = await http.get(
       uri,
@@ -28,11 +35,40 @@ class HttpChatImplementation implements HttpChat {
     );
 
     var code = response.statusCode;
-    print('get All ChatRooms list. code=$code, body=${response.body}');
+    print('get Chat Rooms By Id list. code=$code, body=${response.body}');
 
     final List<ChatRoom> result = jsonDecode(utf8.decode(response.bodyBytes))
         .map<ChatRoom>((json) => ChatRoom.fromJson(json)).toList();
     print('get list body. result=$result');
     return result;
+  }
+
+  @override
+  Future<ChatRoom> createChatRoom(memberName, memberId) async {
+    final id = await storage.read(key: 'id');
+    final body = {
+      'name' : memberName,
+      'employeeId' : id,
+      'memberId' : memberId
+    };
+
+    var url = '/chat/room';
+    final uri = Uri.http(serverUrl, url);
+    print('create Chat Room. url=$uri');
+
+    final jsonString = json.encode(body);
+    final response = await http.post(
+        uri,
+        body: jsonString,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'toyProject1234'
+        }
+    );
+    print('get monthly list body. result=${response.body}');
+    final dynamic resultDynamic = jsonDecode(utf8.decode(response.bodyBytes));
+    ChatRoom chatRoom = ChatRoom.fromJson(resultDynamic);
+    print('create Chat Room body. result=$chatRoom');
+    return chatRoom;
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fms/component/ChatRoomScreen.dart';
 
+import '../component/chatroom_bottom_sheet.dart';
+import '../const/colors.dart';
 import '../locator/locator.dart';
 import '../model/chat_room.dart';
 import '../service/http_chat.dart';
@@ -30,30 +32,56 @@ class _ChatListState extends State<ChatList> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            "채팅",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
+    return Scaffold(
+      floatingActionButton: renderFloatingActionButton(),
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              "채팅",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: Scaffold(
-            appBar: searchHeader(setState),
-            body: chatRoomFoundList(),
+          Expanded(
+            child: Scaffold(
+              appBar: searchHeader(setState),
+              body: chatRoomFoundList(),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
+  FloatingActionButton renderFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: (){
+        // TODO Create Custom Chat Room
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) {
+            return ChatroomBottomSheet();
+          },
+        ).whenComplete(() => resetPage());
+      },
+      backgroundColor: PRIMARY_COLOR,
+      child: Icon(Icons.add),
+    );
+  }
+
+  resetPage() {
+    setState(() {
+
+    });
+  }
+
   chatRoomFoundList() {
-    searchResultList = _httpChat.fetchAllChatRooms();
+    searchResultList = _httpChat.fetchChatRoomsById();
 
     return FutureBuilder(
         future: searchResultList,
