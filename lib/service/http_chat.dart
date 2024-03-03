@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fms/model/chat_room.dart';
@@ -9,6 +10,8 @@ abstract class HttpChat {
   Future<List<ChatRoom>> fetchChatRoomsById();
 
   Future<ChatRoom> createChatRoom(memberName, memberId);
+
+  void updateChatUser();
 }
 
 class HttpChatImplementation implements HttpChat {
@@ -70,5 +73,32 @@ class HttpChatImplementation implements HttpChat {
     ChatRoom chatRoom = ChatRoom.fromJson(resultDynamic);
     print('create Chat Room body. result=$chatRoom');
     return chatRoom;
+  }
+
+  @override
+  Future<void> updateChatUser() async {
+    final id = await storage.read(key: 'id');
+    var token = await storage.read(key: 'token');
+    print('updateChatUser get Token???. token=$token');
+    final body = {
+      'id' : id,
+      'deviceToken' : token,
+      'status' : "LEAVE"
+    };
+
+    var url = '/chat/user';
+    final uri = Uri.http(serverUrl, url);
+    print('update Chat User. url=$uri');
+
+    final jsonString = json.encode(body);
+    final response = await http.put(
+        uri,
+        body: jsonString,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'toyProject1234'
+        }
+    );
+    print('update Chat User result. result=$response');
   }
 }

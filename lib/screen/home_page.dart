@@ -29,7 +29,6 @@ class _HomePageState extends State<HomePage> {
   // dynamic userInfo = '';
   late Login login;
   final HttpService _httpService = locator<HttpService>();
-  var messageString = "";
 
   logout() async {
     // userInfo = await storage.read(key: 'login');
@@ -50,34 +49,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void getMyDeviceToken() async {
-    final token = await FirebaseMessaging.instance.getToken();
-    print("내 디바이스 토큰 : $token");
-    // TODO device token 서버에서 관리 필요. 서버로 전송, 저장
-  }
-
   @override
   void initState() {
-    getMyDeviceToken();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
 
       if(notification != null) {
+        print("showwwwwwwww");
         FlutterLocalNotificationsPlugin().show(
-            notification.hashCode,
-            notification.title,
-            notification.body,
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
                 'high_importance_channel', 'high_importance_notification', importance: Importance.max
-              ),
             ),
+          ),
         );
-
-        setState(() {
-          messageString = message.notification!.body!;
-          print("Foreground 메시지 수신 : $messageString");
-        });
       }
     });
     super.initState();
@@ -85,7 +73,6 @@ class _HomePageState extends State<HomePage> {
     // FlutterLocalNotification.init();
 
     baseUrl = dotenv.get('SERVER_URL');
-
     // 비동기로 flutter secure storage 정보를 불러오는 작업
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkUserState();

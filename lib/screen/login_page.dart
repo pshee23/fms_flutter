@@ -1,6 +1,8 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fms/screen/register_user.dart';
+import 'package:fms/service/http_chat.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -26,6 +28,7 @@ class _LoginPageState extends State<LoginPage> {
   static final storage = FlutterSecureStorage();
 
   final HttpService _httpService = locator<HttpService>();
+  final HttpChat _httpChat = locator<HttpChat>();
 
   String baseUrl = '';
   dynamic userInfo = '';
@@ -34,12 +37,20 @@ class _LoginPageState extends State<LoginPage> {
   //flutter_secure_storage 사용을 위한 초기화 작업
   @override
   void initState() {
+    getMyDeviceToken();
     super.initState();
     isEmployee = [true, false];
     // 비동기로 flutter secure storage 정보를 불러오는 작업
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _asyncMethod();
     });
+  }
+
+  void getMyDeviceToken() async {
+    final token = await FirebaseMessaging.instance.getToken();
+    print("내 디바이스 토큰 : $token");
+    await storage.write(key: 'token', value: token,);
+    // TODO device token 서버에서 관리 필요. 서버로 전송, 저장
   }
 
   _asyncMethod() async {
@@ -59,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
     // user의 정보가 있다면 로그인 후 들어가는 첫 페이지로 넘어가게 합니다.
     if (userInfo != null) {
       print('로그인 정보 있음!');
+      _httpChat.updateChatUser();
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -106,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
       await storage.write(key: 'login', value: val,);
 
       _httpService.fetchId(isEmployee, accountName);
-
+      _httpChat.updateChatUser();
       Navigator.push(
         context,
         MaterialPageRoute(

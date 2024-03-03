@@ -1,15 +1,16 @@
 import 'dart:convert';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:fms/component/FlutterLocalNotification.dart';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
 
+import '../locator/locator.dart';
 import '../model/chat_message.dart';
 import '../model/chat_room.dart';
+import '../service/http_chat.dart';
 import 'chat_bubbles.dart';
 
 class ChatRoomScreen extends StatefulWidget {
@@ -28,70 +29,85 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final TextEditingController _textEditingController = TextEditingController();
 
   static final storage = FlutterSecureStorage();
+  final HttpChat _httpChat = locator<HttpChat>();
 
   StompClient? stompClient;
   final socketUrl = 'baseurl/chatting';
   String serverUrl = dotenv.get('SERVER_URL');
   String roomId = "";
   String myId = "";
+  String token = "";
 
   void onConnect(StompFrame frame) {
     print("################# onConnect");
     stompClient!.subscribe(
         destination: '/sub/chat/room/' + roomId,
         callback: (StompFrame frame) {
-          print("################# callback");
           if (frame.body != null) {
-            print("################# body=" + frame.body.toString());
-            // final ChatMessage result = json.decode(frame.body!)
-            //     .map<ChatMessage>((json) => ChatMessage.fromJson(json));
             final dynamic resultDynamic = json.decode(frame.body!);
             ChatMessage result = ChatMessage.fromJson(resultDynamic);
-            print("################# result=" + result.toString());
+
             bool isMe = false;
             if(myId == result.sender) {
-              print("same @@ " + myId);
               isMe = true;
             } else {
-              print("not same @@ " + myId + " / result.sender =" + result.sender);
               isMe = false;
             }
+
             setState(() {
               chats.add(ChatBubbles(chatMessage: result, isMe: isMe,));
-
-              FlutterLocalNotification.showNotification(result.sender, result.content);
             });
           }
         });
     sendJoin();
   }
 
-  checkMyState() async {
+  getMyId() async {
     myId = (await storage.read(key: 'id'))!;
   }
 
+  void getMyDeviceToken() async {
+    token = (await FirebaseMessaging.instance.getToken())!;
+    print("내 디바이스 토큰 : $token");
+  }
+
   sendJoin() {
-    print("################# sendJoin");
+    print("################# sendJoin.");
     stompClient!.send(
         destination: '/pub/chat/message',
         body: json.encode({
           "type" : "JOIN",
           "roomId": roomId,
           "sender" : myId,
-          "content" : null
+          "content" : null,
+          "deviceToken" : token
+        }));
+  }
+
+  sendLeave() {
+    print("################# sendLeave.");
+    stompClient!.send(
+        destination: '/pub/chat/message',
+        body: json.encode({
+          "type" : "LEAVE",
+          "roomId": roomId,
+          "sender" : myId,
+          "content" : null,
+          "deviceToken" : token
         }));
   }
 
   sendMessage(text){
+    print("################# send Text");
     setState(() {
-      // stompClient!.send(destination: '/chat/message', body: json.encode({"content" : _textController.value.text, "uuid": myUuid}));
       stompClient!.send(
           destination: '/pub/chat/message',
           body: json.encode({
             "type" : "CHAT",
             "roomId": roomId,
             "sender" : myId,
-            "content" : text
+            "content" : text,
+            "deviceToken" : token
           }));
     });
   }
@@ -99,7 +115,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   void initState() {
     roomId = widget.chatRoom.roomId;
-    checkMyState();
+    getMyId();
     var url = "http://$serverUrl/ws";
     print("############ roomId=" +roomId+"/ url=" + url);
     super.initState();
@@ -125,12 +141,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               title: Text("Chat with " + widget.chatRoom.name, style: Theme.of(context).textTheme.titleLarge,),
-              actions: [
-                Icon(Icons.search, size: 20,),
-                SizedBox(width: 25,),
-                Icon(Icons.menu ,size: 20,),
-                SizedBox(width: 25,)
-              ],
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  print("뒤로 가기 버튼 클릭!");
+                  _httpChat.updateChatUser();
+                  stompClient?.deactivate();
+                  Navigator.pop(context);
+                },
+              ),
             ),
             body: Column(
                 children: [
