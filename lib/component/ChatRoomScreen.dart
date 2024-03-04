@@ -82,6 +82,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           "content" : null,
           "deviceToken" : token
         }));
+    _httpChat.updateChatUser("JOIN");
   }
 
   sendLeave() {
@@ -145,7 +146,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 icon: Icon(Icons.arrow_back),
                 onPressed: () {
                   print("뒤로 가기 버튼 클릭!");
-                  _httpChat.updateChatUser();
+                  _httpChat.updateChatUser("LEAVE");
                   stompClient?.deactivate();
                   Navigator.pop(context);
                 },

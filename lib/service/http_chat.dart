@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fms/model/chat_room.dart';
@@ -11,7 +10,7 @@ abstract class HttpChat {
 
   Future<ChatRoom> createChatRoom(memberName, memberId);
 
-  void updateChatUser();
+  void updateChatUser(status);
 }
 
 class HttpChatImplementation implements HttpChat {
@@ -76,16 +75,16 @@ class HttpChatImplementation implements HttpChat {
   }
 
   @override
-  Future<void> updateChatUser() async {
+  Future<void> updateChatUser(status) async {
     final id = await storage.read(key: 'id');
     var token = await storage.read(key: 'token');
     print('updateChatUser get Token???. token=$token');
     final body = {
       'id' : id,
-      'deviceToken' : token,
-      'status' : "LEAVE"
+      'deviceToken' : token.toString(),
+      'status' : status
     };
-
+    print('updateChatUser body. body=$body');
     var url = '/chat/user';
     final uri = Uri.http(serverUrl, url);
     print('update Chat User. url=$uri');

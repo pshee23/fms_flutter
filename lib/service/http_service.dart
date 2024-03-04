@@ -231,8 +231,8 @@ class HttpServiceImplementation implements HttpService {
 
     var code = response.statusCode;
     print('fetchId result. code=$code, body=${response.body}');
-    storage.write(key: 'id', value: response.body,);
-    storage.write(key: 'isEmployee', value: isEmployee.toString(),);
+    await storage.write(key: 'id', value: response.body,);
+    await storage.write(key: 'isEmployee', value: isEmployee.toString(),);
   }
 
   @override

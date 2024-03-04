@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
     // user의 정보가 있다면 로그인 후 들어가는 첫 페이지로 넘어가게 합니다.
     if (userInfo != null) {
       print('로그인 정보 있음!');
-      _httpChat.updateChatUser();
+      _httpChat.updateChatUser("LEAVE");
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
       await storage.write(key: 'login', value: val,);
 
       _httpService.fetchId(isEmployee, accountName);
-      _httpChat.updateChatUser();
+      _httpChat.updateChatUser("LEAVE");
       Navigator.push(
         context,
         MaterialPageRoute(
