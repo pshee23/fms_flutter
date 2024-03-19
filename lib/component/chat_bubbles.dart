@@ -5,10 +5,12 @@ import '../model/chat_message.dart';
 class ChatBubbles extends StatelessWidget {
   const ChatBubbles({
     required this.chatMessage,
+    required this.isRead,
     required this.isMe,
     super.key});
 
   final ChatMessage chatMessage;
+  final bool isRead;
   final bool isMe;
 
   @override
@@ -43,6 +45,7 @@ class ChatBubbles extends StatelessWidget {
       return Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
+          Text(isRead ? '' : '1'),
           Container(
             decoration: BoxDecoration(
               color: isMe ? Colors.grey[300] : Colors.blue,

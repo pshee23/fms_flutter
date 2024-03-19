@@ -7,6 +7,8 @@ import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
 
+import '../localDB/DatabaseService.dart';
+import '../localDB/local_chat_message.dart';
 import '../locator/locator.dart';
 import '../model/chat_message.dart';
 import '../model/chat_room.dart';
@@ -30,6 +32,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   static final storage = FlutterSecureStorage();
   final HttpChat _httpChat = locator<HttpChat>();
+  final DatabaseService database = DatabaseService();
 
   StompClient? stompClient;
   final socketUrl = 'baseurl/chatting';
@@ -48,14 +51,25 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ChatMessage result = ChatMessage.fromJson(resultDynamic);
 
             bool isMe = false;
+            String isRead = 'N';
             if(myId == result.sender) {
               isMe = true;
+              isRead = 'N';
             } else {
               isMe = false;
+              isRead = 'Y';
             }
 
+            LocalChatMessage message = LocalChatMessage(null, result.roomId, isRead, result.sender, result.content);
+
             setState(() {
-              chats.add(ChatBubbles(chatMessage: result, isMe: isMe,));
+              if(result.type == "CHAT") {
+                chats.add(ChatBubbles(chatMessage: result, isRead: isRead == 'N' ? false : true, isMe: isMe,));
+                database.addMessage(message);
+              } else if (result.type == "JOIN"){
+
+              }
+
             });
           }
         });
@@ -82,7 +96,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           "content" : null,
           "deviceToken" : token
         }));
-    _httpChat.updateChatUser("JOIN");
+    _httpChat.updateChatUser(roomId, "JOIN");
   }
 
   sendLeave() {
@@ -113,9 +127,33 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     });
   }
 
+  getChatHistory() async {
+    Future<List<LocalChatMessage>> localChat = database.findMessages(roomId);
+    await localChat.asStream().forEach((element) {
+      element.forEach((element) {
+        print("############# localChat = " + element.toString());
+        bool isMe = false;
+        if(myId == element.sender) {
+          isMe = true;
+        } else {
+          isMe = false;
+        }
+        ChatMessage message = ChatMessage("CHAT", element.roomId, element.sender, element.content);
+        ChatBubbles bubbles = ChatBubbles(chatMessage: message, isRead: element.isRead == 'N' ? false : true, isMe: isMe,);
+        chats.add(bubbles);
+      });
+    });
+    setState(() {
+
+    });
+  }
+
   @override
   void initState() {
     roomId = widget.chatRoom.roomId;
+
+    getChatHistory();
+
     getMyId();
     var url = "http://$serverUrl/ws";
     print("############ roomId=" +roomId+"/ url=" + url);
@@ -146,7 +184,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 icon: Icon(Icons.arrow_back),
                 onPressed: () {
                   print("뒤로 가기 버튼 클릭!");
-                  _httpChat.updateChatUser("LEAVE");
+                  _httpChat.updateChatUser(roomId, "LEAVE");
                   stompClient?.deactivate();
                   Navigator.pop(context);
                 },

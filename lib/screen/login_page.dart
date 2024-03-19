@@ -2,7 +2,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fms/screen/register_user.dart';
-import 'package:fms/service/http_chat.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -28,7 +27,6 @@ class _LoginPageState extends State<LoginPage> {
   static final storage = FlutterSecureStorage();
 
   final HttpService _httpService = locator<HttpService>();
-  final HttpChat _httpChat = locator<HttpChat>();
 
   String baseUrl = '';
   dynamic userInfo = '';
@@ -70,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
     // user의 정보가 있다면 로그인 후 들어가는 첫 페이지로 넘어가게 합니다.
     if (userInfo != null) {
       print('로그인 정보 있음!');
-      _httpChat.updateChatUser("LEAVE");
+      // _httpChat.updateChatUser(null, "LEAVE");
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -118,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
       await storage.write(key: 'login', value: val,);
 
       _httpService.fetchId(isEmployee, accountName);
-      _httpChat.updateChatUser("LEAVE");
+      // _httpChat.updateChatUser(null, "LEAVE");
       Navigator.push(
         context,
         MaterialPageRoute(

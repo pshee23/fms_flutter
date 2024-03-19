@@ -10,7 +10,7 @@ abstract class HttpChat {
 
   Future<ChatRoom> createChatRoom(memberName, memberId);
 
-  void updateChatUser(status);
+  void updateChatUser(roomId, status);
 }
 
 class HttpChatImplementation implements HttpChat {
@@ -75,7 +75,7 @@ class HttpChatImplementation implements HttpChat {
   }
 
   @override
-  Future<void> updateChatUser(status) async {
+  Future<void> updateChatUser(roomId, status) async {
     final id = await storage.read(key: 'id');
     var token = await storage.read(key: 'token');
     print('updateChatUser get Token???. token=$token');
@@ -85,7 +85,7 @@ class HttpChatImplementation implements HttpChat {
       'status' : status
     };
     print('updateChatUser body. body=$body');
-    var url = '/chat/user';
+    var url = '/chat/room/$roomId/user';
     final uri = Uri.http(serverUrl, url);
     print('update Chat User. url=$uri');
 
