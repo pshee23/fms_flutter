@@ -1,28 +1,28 @@
 class ChatRoom {
   final String roomId;
-  final String name;
-  final String employeeId;
-  final String memberId;
+  final String title;
+  final String toId;
+  final String fromId;
 
-  ChatRoom(this.roomId, this.name, this.employeeId, this.memberId);
+  ChatRoom(this.roomId, this.title, this.toId, this.fromId);
 
   ChatRoom.fromJson(Map<String, dynamic> json):
         roomId = json['roomId'],
-        name = json['name'],
-        employeeId = json['employeeId'],
-        memberId = json['memberId'];
+        title = json['title'],
+        toId = json['toId'],
+        fromId = json['fromId'];
 
   Map<String, dynamic> toJson() => {
     'roomId' : roomId,
-    'name' : name,
-    'employeeId' : employeeId,
-    'memberId' : memberId,
+    'title' : title,
+    'toId' : toId,
+    'fromId' : fromId,
   };
 
   @override
   String toString() =>
       'roomId=$roomId, '
-      'name=$name, '
-      'employeeId=$employeeId, '
-      'memberId=$memberId';
+      'title=$title, '
+      'toId=$toId, '
+      'fromId=$fromId';
 }

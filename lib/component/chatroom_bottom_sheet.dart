@@ -78,8 +78,7 @@ class _ChatroomBottomSheetState extends State<ChatroomBottomSheet> {
     // validate를 실행하면 모든 form 필드의 validator가 실행되고 에러가 있으면 String 리턴, 없으면 null
     if(formKey.currentState!.validate()) {
       formKey.currentState!.save();
-      Future<ChatRoom> chatRoom = _chatService.createChatRoom(memberName, memberId);
-      print('create chatRoom ?! $chatRoom');
+      _chatService.createChatRoom(memberId);
       Navigator.pop(context);
     } else {
       print("create chatRoom 에러가 있습니다");

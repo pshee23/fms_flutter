@@ -8,7 +8,7 @@ abstract class HttpChat {
 
   Future<List<ChatRoom>> fetchChatRoomsById();
 
-  Future<ChatRoom> createChatRoom(memberName, memberId);
+  void createChatRoom(memberId);
 
   void updateChatUser(roomId, status);
 }
@@ -22,10 +22,10 @@ class HttpChatImplementation implements HttpChat {
   Future<List<ChatRoom>> fetchChatRoomsById() async {
     final id = await storage.read(key: 'id');
     final isEmployee = await storage.read(key: 'isEmployee');
-    String userType = (isEmployee != null && isEmployee.contains("true")) ? 'employee' : 'member';
+    String userType = (isEmployee != null && isEmployee.contains("true")) ? 'EMPLOYEE' : 'MEMBER';
 
-    var url = '/chat/room/list/$userType/$id';
-    print('fetch Chat Rooms By Id. url=$url');
+    var url = '/room/list/user/$id';
+    print('fetch Chat Rooms By userId. url=$url');
 
     final uri = Uri.http(serverUrl, url);
     final response = await http.get(
@@ -45,11 +45,12 @@ class HttpChatImplementation implements HttpChat {
     return result;
   }
 
+  // create chat room (Requester: Employee)
   @override
-  Future<ChatRoom> createChatRoom(memberName, memberId) async {
+  void createChatRoom(memberId) async {
     final id = await storage.read(key: 'id');
+    // TODO List로 Id 넘길수 있도록 변경
     final body = {
-      'name' : memberName,
       'employeeId' : id,
       'memberId' : memberId
     };
@@ -67,11 +68,7 @@ class HttpChatImplementation implements HttpChat {
           'Authorization': 'toyProject1234'
         }
     );
-    print('get monthly list body. result=${response.body}');
-    final dynamic resultDynamic = jsonDecode(utf8.decode(response.bodyBytes));
-    ChatRoom chatRoom = ChatRoom.fromJson(resultDynamic);
-    print('create Chat Room body. result=$chatRoom');
-    return chatRoom;
+    print('create Chat Room body. result=${response.statusCode}');
   }
 
   @override
@@ -79,13 +76,13 @@ class HttpChatImplementation implements HttpChat {
     final id = await storage.read(key: 'id');
     var token = await storage.read(key: 'token');
     print('updateChatUser get Token???. token=$token');
+
     final body = {
-      'id' : id,
-      'deviceToken' : token.toString(),
-      'status' : status
+      'status' : status,
+      'deviceToken' : token
     };
     print('updateChatUser body. body=$body');
-    var url = '/chat/room/$roomId/user';
+    var url = '/chat/room/$roomId/user/$id';
     final uri = Uri.http(serverUrl, url);
     print('update Chat User. url=$uri');
 

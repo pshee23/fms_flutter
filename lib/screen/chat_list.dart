@@ -206,10 +206,10 @@ class RoomResult extends StatelessWidget {
                 leading: CircleAvatar(child: Icon(Icons.face),backgroundColor: Colors.blue,),
                 title: Row(
                   children: [
-                    Text(eachRoom.name, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
+                    Text(eachRoom.title, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
                     SizedBox(width: 8,),
                     Text("["),
-                    Text(eachRoom.memberId, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
+                    Text(eachRoom.toId, style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),),
                     Text("]"),
                   ],
                 ),

@@ -179,7 +179,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
-              title: Text("Chat with " + widget.chatRoom.name, style: Theme.of(context).textTheme.titleLarge,),
+              title: Text("Chat with " + widget.chatRoom.title, style: Theme.of(context).textTheme.titleLarge,),
               leading: IconButton(
                 icon: Icon(Icons.arrow_back),
                 onPressed: () {
